@@ -49,13 +49,13 @@ export default function AdminServices() {
     }
   }, [isAuthenticated, isLoading, user, toast]);
 
-  const { data: services = [], error: servicesError } = useQuery({
+  const { data: services = [], error: servicesError } = useQuery<any[]>({
     queryKey: ["/api/services"],
     enabled: isAuthenticated && user?.role === 'ADMIN',
     retry: false,
   });
 
-  const { data: categories = [], error: categoriesError } = useQuery({
+  const { data: categories = [], error: categoriesError } = useQuery<any[]>({
     queryKey: ["/api/service-categories"],
     enabled: isAuthenticated && user?.role === 'ADMIN',
     retry: false,
@@ -81,7 +81,12 @@ export default function AdminServices() {
 
   const createServiceMutation = useMutation({
     mutationFn: async (serviceData: any) => {
-      return apiRequest("POST", "/api/admin/services", serviceData);
+      const formattedData = {
+        ...serviceData,
+        basePrice: serviceData.basePrice.toString(),
+        durationMins: parseInt(serviceData.durationMins)
+      };
+      return apiRequest("POST", "/api/admin/services", formattedData);
     },
     onSuccess: () => {
       toast({
@@ -114,7 +119,12 @@ export default function AdminServices() {
 
   const updateServiceMutation = useMutation({
     mutationFn: async ({ id, ...serviceData }: any) => {
-      return apiRequest("PUT", `/api/admin/services/${id}`, serviceData);
+      const formattedData = {
+        ...serviceData,
+        basePrice: serviceData.basePrice.toString(),
+        durationMins: parseInt(serviceData.durationMins)
+      };
+      return apiRequest("PUT", `/api/admin/services/${id}`, formattedData);
     },
     onSuccess: () => {
       toast({
