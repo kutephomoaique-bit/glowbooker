@@ -26,6 +26,7 @@ import {
   Filter
 } from "lucide-react";
 import { format } from "date-fns";
+import { BookingWithRelations } from "@/components/CalendarView";
 
 export default function AdminBookings() {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -34,7 +35,7 @@ export default function AdminBookings() {
 
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [editingBooking, setEditingBooking] = useState<any>(null);
+  const [editingBooking, setEditingBooking] = useState<BookingWithRelations | null>(null);
   const [editDialog, setEditDialog] = useState(false);
 
   useEffect(() => {
@@ -53,7 +54,7 @@ export default function AdminBookings() {
     }
   }, [isAuthenticated, isLoading, user, toast]);
 
-  const { data: bookings = [], error: bookingsError } = useQuery({
+  const { data: bookings = [], error: bookingsError } = useQuery<BookingWithRelations[]>({
     queryKey: ["/api/admin/bookings"],
     enabled: isAuthenticated && user?.role === 'ADMIN',
     retry: false,
@@ -75,7 +76,7 @@ export default function AdminBookings() {
   }, [bookingsError, toast]);
 
   const updateBookingMutation = useMutation({
-    mutationFn: async ({ id, ...bookingData }: any) => {
+    mutationFn: async ({ id, ...bookingData }: { id: string; [key: string]: any }) => {
       return apiRequest("PUT", `/api/admin/bookings/${id}`, bookingData);
     },
     onSuccess: () => {
@@ -137,7 +138,7 @@ export default function AdminBookings() {
     }
   };
 
-  const filteredBookings = bookings.filter((booking: any) => {
+  const filteredBookings = bookings.filter((booking: BookingWithRelations) => {
     if (statusFilter !== "all" && booking.status !== statusFilter) {
       return false;
     }
@@ -152,11 +153,11 @@ export default function AdminBookings() {
     return true;
   });
 
-  const upcomingBookings = bookings.filter((booking: any) => 
+  const upcomingBookings = bookings.filter((booking: BookingWithRelations) => 
     new Date(booking.dateTime) > new Date() && booking.status !== 'CANCELLED'
   );
 
-  const todayBookings = bookings.filter((booking: any) => {
+  const todayBookings = bookings.filter((booking: BookingWithRelations) => {
     const today = new Date();
     const bookingDate = new Date(booking.dateTime);
     return (
@@ -170,7 +171,7 @@ export default function AdminBookings() {
     updateBookingMutation.mutate({ id: bookingId, status });
   };
 
-  const openEditDialog = (booking: any) => {
+  const openEditDialog = (booking: BookingWithRelations) => {
     setEditingBooking(booking);
     setEditDialog(true);
   };
@@ -276,7 +277,7 @@ export default function AdminBookings() {
               <CardContent>
                 <div className="space-y-4" data-testid="all-bookings-list">
                   {filteredBookings.length > 0 ? (
-                    filteredBookings.map((booking: any) => (
+                    filteredBookings.map((booking: BookingWithRelations) => (
                       <div 
                         key={booking.id} 
                         className="p-4 border rounded-lg hover:bg-muted/30 transition-colors"
@@ -410,7 +411,7 @@ export default function AdminBookings() {
               <CardContent>
                 <div className="space-y-4" data-testid="today-bookings-list">
                   {todayBookings.length > 0 ? (
-                    todayBookings.map((booking: any) => (
+                    todayBookings.map((booking: BookingWithRelations) => (
                       <div 
                         key={booking.id} 
                         className="p-4 border rounded-lg"
@@ -452,7 +453,7 @@ export default function AdminBookings() {
               <CardContent>
                 <div className="space-y-4" data-testid="upcoming-bookings-list">
                   {upcomingBookings.length > 0 ? (
-                    upcomingBookings.slice(0, 10).map((booking: any) => (
+                    upcomingBookings.slice(0, 10).map((booking: BookingWithRelations) => (
                       <div 
                         key={booking.id} 
                         className="p-4 border rounded-lg"
@@ -522,7 +523,7 @@ export default function AdminBookings() {
                   <label className="block text-sm font-medium mb-2">Status</label>
                   <Select
                     value={editingBooking.status}
-                    onValueChange={(value) => setEditingBooking({ ...editingBooking, status: value })}
+                    onValueChange={(value) => setEditingBooking({ ...editingBooking, status: value as 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'DONE' })}
                     data-testid="edit-status-select"
                   >
                     <SelectTrigger>

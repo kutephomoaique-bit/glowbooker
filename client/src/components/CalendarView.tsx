@@ -26,38 +26,26 @@ import { format,
   addMonths, 
   subMonths 
 } from "date-fns";
+import type { Booking, Service, ServiceCategory, User as DBUser, Staff } from "@shared/schema";
 
-interface Booking {
-  id: string;
-  dateTime: string;
-  service: {
-    name: string;
-    category: { name: string };
+// Extended booking type with populated relations for calendar display
+export interface BookingWithRelations extends Omit<Booking, 'userId' | 'serviceId' | 'staffId'> {
+  user?: DBUser;
+  service: Service & {
+    category: ServiceCategory;
   };
-  customerName?: string;
-  customerPhone?: string;
-  customerEmail?: string;
-  status: string;
-  durationMins: number;
-  notes?: string;
-  user?: {
-    firstName?: string;
-    lastName?: string;
-  };
-  staff?: {
-    name: string;
-  };
+  staff?: Staff;
 }
 
 interface CalendarViewProps {
-  bookings: Booking[];
+  bookings: BookingWithRelations[];
   onUpdateBookingStatus?: (bookingId: string, status: string) => void;
-  onEditBooking?: (booking: Booking) => void;
+  onEditBooking?: (booking: BookingWithRelations) => void;
 }
 
 export default function CalendarView({ bookings, onUpdateBookingStatus, onEditBooking }: CalendarViewProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [selectedBooking, setSelectedBooking] = useState<BookingWithRelations | null>(null);
   const [showBookingDialog, setShowBookingDialog] = useState(false);
 
   const monthStart = startOfMonth(currentDate);
@@ -114,7 +102,7 @@ export default function CalendarView({ bookings, onUpdateBookingStatus, onEditBo
     setCurrentDate(addMonths(currentDate, 1));
   };
 
-  const handleBookingClick = (booking: Booking) => {
+  const handleBookingClick = (booking: BookingWithRelations) => {
     setSelectedBooking(booking);
     setShowBookingDialog(true);
   };
