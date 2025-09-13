@@ -230,7 +230,7 @@ export default function AdminGallery() {
   // Handle getting upload parameters for ObjectUploader
   const handleGetUploadParameters = async () => {
     try {
-      const response = await apiRequest("POST", "/api/objects/upload");
+      const response: any = await apiRequest("POST", "/api/objects/upload");
       return {
         method: "PUT" as const,
         url: response.uploadURL,
