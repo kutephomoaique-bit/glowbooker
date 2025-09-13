@@ -98,7 +98,7 @@ export default function Navigation() {
                     <DropdownMenuItem asChild>
                       <Link href="/admin" className="flex items-center" data-testid="link-admin">
                         <Settings className="w-4 h-4 mr-2" />
-                        Admin Dashboard
+                        HOME BASE Admin
                       </Link>
                     </DropdownMenuItem>
                   )}
@@ -164,7 +164,7 @@ export default function Navigation() {
                         <Link href="/admin" onClick={() => setMobileOpen(false)}>
                           <Button variant="outline" className="w-full justify-start" data-testid="mobile-link-admin">
                             <Settings className="w-4 h-4 mr-2" />
-                            Admin Dashboard
+                            HOME BASE Admin
                           </Button>
                         </Link>
                       )}
