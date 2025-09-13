@@ -34,6 +34,7 @@ export const feedbackStatusEnum = pgEnum('feedback_status', ['PENDING', 'APPROVE
 export const discountTypeEnum = pgEnum('discount_type', ['PERCENT', 'AMOUNT']);
 export const scopeTypeEnum = pgEnum('scope_type', ['GLOBAL', 'CATEGORY', 'SERVICE']);
 export const galleryCategoryEnum = pgEnum('gallery_category', ['Nail', 'Eyelash', 'Facial', 'General']);
+export const dayOfWeekEnum = pgEnum('day_of_week', ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY']);
 
 // User storage table.
 // (IMPORTANT) This table is mandatory for Replit Auth, don't drop it.
@@ -85,8 +86,13 @@ export const eventPromos = pgTable("event_promos", {
 export const staff = pgTable("staff", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: varchar("name").notNull(),
+  email: varchar("email"),
+  phone: varchar("phone"),
+  position: varchar("position"),
   bio: text("bio"),
+  profileImageUrl: varchar("profile_image_url"),
   skills: text("skills").array(),
+  experienceYears: integer("experience_years"),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -138,6 +144,23 @@ export const contactMessages = pgTable("contact_messages", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const staffAvailability = pgTable("staff_availability", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  staffId: varchar("staff_id").references(() => staff.id).notNull(),
+  dayOfWeek: dayOfWeekEnum("day_of_week").notNull(),
+  startTime: varchar("start_time").notNull(), // Format: "09:00"
+  endTime: varchar("end_time").notNull(), // Format: "17:00"
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const staffServices = pgTable("staff_services", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  staffId: varchar("staff_id").references(() => staff.id).notNull(),
+  serviceId: varchar("service_id").references(() => services.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const contentSettings = pgTable("content_settings", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   slogans: text("slogans").array(),
@@ -163,6 +186,7 @@ export const servicesRelations = relations(services, ({ one, many }) => ({
     references: [serviceCategories.id],
   }),
   bookings: many(bookings),
+  staffServices: many(staffServices),
 }));
 
 export const usersRelations = relations(users, ({ many }) => ({
@@ -194,6 +218,26 @@ export const feedbackRelations = relations(feedback, ({ one }) => ({
 
 export const staffRelations = relations(staff, ({ many }) => ({
   bookings: many(bookings),
+  availability: many(staffAvailability),
+  staffServices: many(staffServices),
+}));
+
+export const staffAvailabilityRelations = relations(staffAvailability, ({ one }) => ({
+  staff: one(staff, {
+    fields: [staffAvailability.staffId],
+    references: [staff.id],
+  }),
+}));
+
+export const staffServicesRelations = relations(staffServices, ({ one }) => ({
+  staff: one(staff, {
+    fields: [staffServices.staffId],
+    references: [staff.id],
+  }),
+  service: one(services, {
+    fields: [staffServices.serviceId],
+    references: [services.id],
+  }),
 }));
 
 // Insert schemas
@@ -242,6 +286,21 @@ export const insertContentSettingsSchema = createInsertSchema(contentSettings).o
   updatedAt: true,
 });
 
+export const insertStaffSchema = createInsertSchema(staff).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertStaffAvailabilitySchema = createInsertSchema(staffAvailability).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertStaffServicesSchema = createInsertSchema(staffServices).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type UpsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -254,6 +313,8 @@ export type GalleryImage = typeof galleryImages.$inferSelect;
 export type Feedback = typeof feedback.$inferSelect;
 export type ContactMessage = typeof contactMessages.$inferSelect;
 export type ContentSettings = typeof contentSettings.$inferSelect;
+export type StaffAvailability = typeof staffAvailability.$inferSelect;
+export type StaffServices = typeof staffServices.$inferSelect;
 
 export type InsertServiceCategory = z.infer<typeof insertServiceCategorySchema>;
 export type InsertService = z.infer<typeof insertServiceSchema>;
@@ -263,3 +324,6 @@ export type InsertGalleryImage = z.infer<typeof insertGalleryImageSchema>;
 export type InsertFeedback = z.infer<typeof insertFeedbackSchema>;
 export type InsertContactMessage = z.infer<typeof insertContactMessageSchema>;
 export type InsertContentSettings = z.infer<typeof insertContentSettingsSchema>;
+export type InsertStaff = z.infer<typeof insertStaffSchema>;
+export type InsertStaffAvailability = z.infer<typeof insertStaffAvailabilitySchema>;
+export type InsertStaffServices = z.infer<typeof insertStaffServicesSchema>;

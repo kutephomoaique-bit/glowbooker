@@ -7,6 +7,9 @@ import {
   insertServiceSchema,
   insertEventPromoSchema,
   insertBookingSchema,
+  insertStaffSchema,
+  insertStaffAvailabilitySchema,
+  insertStaffServicesSchema,
   insertGalleryImageSchema,
   insertFeedbackSchema,
   insertContactMessageSchema,
@@ -144,6 +147,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching staff:", error);
       res.status(500).json({ message: "Failed to fetch staff" });
+    }
+  });
+
+  // Public route - Staff by service
+  app.get('/api/staff/by-service/:serviceId', async (req, res) => {
+    try {
+      const staff = await storage.getStaffByService(req.params.serviceId);
+      res.json(staff);
+    } catch (error) {
+      console.error("Error fetching staff by service:", error);
+      res.status(500).json({ message: "Failed to fetch staff by service" });
     }
   });
 
@@ -450,6 +464,136 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating content settings:", error);
       res.status(500).json({ message: "Failed to update content settings" });
+    }
+  });
+
+  // Admin routes - Staff Management
+  app.get('/api/admin/staff', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const staff = await storage.getStaff();
+      res.json(staff);
+    } catch (error) {
+      console.error("Error fetching staff:", error);
+      res.status(500).json({ message: "Failed to fetch staff" });
+    }
+  });
+
+  app.get('/api/admin/staff/:id', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const staffMember = await storage.getStaffMember(req.params.id);
+      if (!staffMember) {
+        return res.status(404).json({ message: "Staff member not found" });
+      }
+      res.json(staffMember);
+    } catch (error) {
+      console.error("Error fetching staff member:", error);
+      res.status(500).json({ message: "Failed to fetch staff member" });
+    }
+  });
+
+  app.post('/api/admin/staff', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const staffData = insertStaffSchema.parse(req.body);
+      const staff = await storage.createStaff(staffData);
+      res.status(201).json(staff);
+    } catch (error) {
+      console.error("Error creating staff:", error);
+      res.status(500).json({ message: "Failed to create staff" });
+    }
+  });
+
+  app.put('/api/admin/staff/:id', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const staffData = insertStaffSchema.partial().parse(req.body);
+      const staff = await storage.updateStaff(req.params.id, staffData);
+      res.json(staff);
+    } catch (error) {
+      console.error("Error updating staff:", error);
+      res.status(500).json({ message: "Failed to update staff" });
+    }
+  });
+
+  app.delete('/api/admin/staff/:id', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      await storage.deleteStaff(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting staff:", error);
+      res.status(500).json({ message: "Failed to delete staff" });
+    }
+  });
+
+  // Admin routes - Staff Availability
+  app.get('/api/admin/staff/:staffId/availability', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const availability = await storage.getStaffAvailability(req.params.staffId);
+      res.json(availability);
+    } catch (error) {
+      console.error("Error fetching staff availability:", error);
+      res.status(500).json({ message: "Failed to fetch staff availability" });
+    }
+  });
+
+  app.post('/api/admin/staff/availability', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const availabilityData = insertStaffAvailabilitySchema.parse(req.body);
+      const availability = await storage.createStaffAvailability(availabilityData);
+      res.status(201).json(availability);
+    } catch (error) {
+      console.error("Error creating staff availability:", error);
+      res.status(500).json({ message: "Failed to create staff availability" });
+    }
+  });
+
+  app.put('/api/admin/staff/availability/:id', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const availabilityData = insertStaffAvailabilitySchema.partial().parse(req.body);
+      const availability = await storage.updateStaffAvailability(req.params.id, availabilityData);
+      res.json(availability);
+    } catch (error) {
+      console.error("Error updating staff availability:", error);
+      res.status(500).json({ message: "Failed to update staff availability" });
+    }
+  });
+
+  app.delete('/api/admin/staff/availability/:id', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      await storage.deleteStaffAvailability(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting staff availability:", error);
+      res.status(500).json({ message: "Failed to delete staff availability" });
+    }
+  });
+
+  // Admin routes - Staff Services
+  app.get('/api/admin/staff/:staffId/services', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const services = await storage.getStaffServices(req.params.staffId);
+      res.json(services);
+    } catch (error) {
+      console.error("Error fetching staff services:", error);
+      res.status(500).json({ message: "Failed to fetch staff services" });
+    }
+  });
+
+  app.post('/api/admin/staff/:staffId/services/:serviceId', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const staffService = await storage.assignServiceToStaff(req.params.staffId, req.params.serviceId);
+      res.status(201).json(staffService);
+    } catch (error) {
+      console.error("Error assigning service to staff:", error);
+      res.status(500).json({ message: "Failed to assign service to staff" });
+    }
+  });
+
+  app.delete('/api/admin/staff/:staffId/services/:serviceId', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      await storage.removeServiceFromStaff(req.params.staffId, req.params.serviceId);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error removing service from staff:", error);
+      res.status(500).json({ message: "Failed to remove service from staff" });
     }
   });
 

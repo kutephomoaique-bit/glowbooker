@@ -7,9 +7,9 @@ interface FooterProps {
 
 export default function Footer({ contentSettings }: FooterProps) {
   const contactInfo = {
-    address: contentSettings?.address || "123 Beauty Street, Luxury District, San Francisco, CA 94102",
-    phone: contentSettings?.phone || "(555) 123-4567",
-    email: "hello@serenitysalon.com",
+    address: contentSettings?.address || "Blk 483A Yishun Ave 6 Singapore 761483",
+    phone: contentSettings?.phone || "+65 9712 1097",
+    email: "kellybeautyhomebase@gmail.com",
     facebook: contentSettings?.facebookUrl || "#",
     instagram: contentSettings?.instagramUrl || "#",
     zalo: contentSettings?.zaloUrl || "#"

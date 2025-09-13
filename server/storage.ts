@@ -5,6 +5,8 @@ import {
   eventPromos,
   bookings,
   staff,
+  staffAvailability,
+  staffServices,
   galleryImages,
   feedback,
   contactMessages,
@@ -16,6 +18,8 @@ import {
   type EventPromo,
   type Booking,
   type Staff,
+  type StaffAvailability,
+  type StaffServices,
   type GalleryImage,
   type Feedback,
   type ContactMessage,
@@ -24,6 +28,9 @@ import {
   type InsertService,
   type InsertEventPromo,
   type InsertBooking,
+  type InsertStaff,
+  type InsertStaffAvailability,
+  type InsertStaffServices,
   type InsertGalleryImage,
   type InsertFeedback,
   type InsertContactMessage,
@@ -68,11 +75,26 @@ export interface IStorage {
   deleteBooking(id: string): Promise<void>;
   
   // Staff operations
-  getStaff(): Promise<Staff[]>;
-  getActiveStaff(): Promise<Staff[]>;
-  createStaff(staff: { name: string; bio?: string; skills?: string[]; isActive?: boolean }): Promise<Staff>;
-  updateStaff(id: string, staff: Partial<{ name: string; bio?: string; skills?: string[]; isActive?: boolean }>): Promise<Staff>;
+  getStaff(): Promise<(Staff & { availability: StaffAvailability[], services: (StaffServices & { service: Service })[] })[]>;
+  getActiveStaff(): Promise<(Staff & { availability: StaffAvailability[], services: (StaffServices & { service: Service })[] })[]>;
+  getStaffByService(serviceId: string): Promise<(Staff & { availability: StaffAvailability[] })[]>;
+  getStaffMember(id: string): Promise<(Staff & { availability: StaffAvailability[], services: (StaffServices & { service: Service })[] }) | undefined>;
+  createStaff(staff: InsertStaff): Promise<Staff>;
+  updateStaff(id: string, staff: Partial<InsertStaff>): Promise<Staff>;
   deleteStaff(id: string): Promise<void>;
+  
+  // Staff Availability operations
+  getStaffAvailability(staffId: string): Promise<StaffAvailability[]>;
+  createStaffAvailability(availability: InsertStaffAvailability): Promise<StaffAvailability>;
+  updateStaffAvailability(id: string, availability: Partial<InsertStaffAvailability>): Promise<StaffAvailability>;
+  deleteStaffAvailability(id: string): Promise<void>;
+  
+  // Staff Services operations
+  getStaffServices(staffId: string): Promise<(StaffServices & { service: Service })[]>;
+  createStaffService(staffService: InsertStaffServices): Promise<StaffServices>;
+  deleteStaffService(id: string): Promise<void>;
+  assignServiceToStaff(staffId: string, serviceId: string): Promise<StaffServices>;
+  removeServiceFromStaff(staffId: string, serviceId: string): Promise<void>;
   
   // Gallery operations
   getGalleryImages(): Promise<GalleryImage[]>;
@@ -300,20 +322,67 @@ export class DatabaseStorage implements IStorage {
   }
   
   // Staff operations
-  async getStaff(): Promise<Staff[]> {
-    return await db.select().from(staff).orderBy(staff.name);
+  async getStaff(): Promise<(Staff & { availability: StaffAvailability[], services: (StaffServices & { service: Service })[] })[]> {
+    const staffData = await db.select().from(staff).orderBy(staff.name);
+    
+    const enrichedStaff = await Promise.all(
+      staffData.map(async (staffMember) => {
+        const availability = await this.getStaffAvailability(staffMember.id);
+        const services = await this.getStaffServices(staffMember.id);
+        return { ...staffMember, availability, services };
+      })
+    );
+    
+    return enrichedStaff;
   }
   
-  async getActiveStaff(): Promise<Staff[]> {
-    return await db.select().from(staff).where(eq(staff.isActive, true)).orderBy(staff.name);
+  async getActiveStaff(): Promise<(Staff & { availability: StaffAvailability[], services: (StaffServices & { service: Service })[] })[]> {
+    const staffData = await db.select().from(staff).where(eq(staff.isActive, true)).orderBy(staff.name);
+    
+    const enrichedStaff = await Promise.all(
+      staffData.map(async (staffMember) => {
+        const availability = await this.getStaffAvailability(staffMember.id);
+        const services = await this.getStaffServices(staffMember.id);
+        return { ...staffMember, availability, services };
+      })
+    );
+    
+    return enrichedStaff;
   }
   
-  async createStaff(staffData: { name: string; bio?: string; skills?: string[]; isActive?: boolean }): Promise<Staff> {
+  async getStaffByService(serviceId: string): Promise<(Staff & { availability: StaffAvailability[] })[]> {
+    const staffServiceData = await db
+      .select()
+      .from(staffServices)
+      .leftJoin(staff, eq(staffServices.staffId, staff.id))
+      .where(eq(staffServices.serviceId, serviceId));
+    
+    const enrichedStaff = await Promise.all(
+      staffServiceData.map(async (row) => {
+        if (!row.staff) return null;
+        const availability = await this.getStaffAvailability(row.staff.id);
+        return { ...row.staff, availability };
+      })
+    );
+    
+    return enrichedStaff.filter(Boolean) as (Staff & { availability: StaffAvailability[] })[];
+  }
+  
+  async getStaffMember(id: string): Promise<(Staff & { availability: StaffAvailability[], services: (StaffServices & { service: Service })[] }) | undefined> {
+    const [staffMember] = await db.select().from(staff).where(eq(staff.id, id));
+    if (!staffMember) return undefined;
+    
+    const availability = await this.getStaffAvailability(id);
+    const services = await this.getStaffServices(id);
+    return { ...staffMember, availability, services };
+  }
+  
+  async createStaff(staffData: InsertStaff): Promise<Staff> {
     const [created] = await db.insert(staff).values(staffData).returning();
     return created;
   }
   
-  async updateStaff(id: string, staffData: Partial<{ name: string; bio?: string; skills?: string[]; isActive?: boolean }>): Promise<Staff> {
+  async updateStaff(id: string, staffData: Partial<InsertStaff>): Promise<Staff> {
     const [updated] = await db
       .update(staff)
       .set(staffData)
@@ -323,7 +392,77 @@ export class DatabaseStorage implements IStorage {
   }
   
   async deleteStaff(id: string): Promise<void> {
+    // Delete related availability and services first
+    await db.delete(staffAvailability).where(eq(staffAvailability.staffId, id));
+    await db.delete(staffServices).where(eq(staffServices.staffId, id));
     await db.delete(staff).where(eq(staff.id, id));
+  }
+  
+  // Staff Availability operations
+  async getStaffAvailability(staffId: string): Promise<StaffAvailability[]> {
+    return await db
+      .select()
+      .from(staffAvailability)
+      .where(eq(staffAvailability.staffId, staffId))
+      .orderBy(staffAvailability.dayOfWeek);
+  }
+  
+  async createStaffAvailability(availability: InsertStaffAvailability): Promise<StaffAvailability> {
+    const [created] = await db.insert(staffAvailability).values(availability).returning();
+    return created;
+  }
+  
+  async updateStaffAvailability(id: string, availability: Partial<InsertStaffAvailability>): Promise<StaffAvailability> {
+    const [updated] = await db
+      .update(staffAvailability)
+      .set(availability)
+      .where(eq(staffAvailability.id, id))
+      .returning();
+    return updated;
+  }
+  
+  async deleteStaffAvailability(id: string): Promise<void> {
+    await db.delete(staffAvailability).where(eq(staffAvailability.id, id));
+  }
+  
+  // Staff Services operations
+  async getStaffServices(staffId: string): Promise<(StaffServices & { service: Service })[]> {
+    const results = await db
+      .select()
+      .from(staffServices)
+      .leftJoin(services, eq(staffServices.serviceId, services.id))
+      .where(eq(staffServices.staffId, staffId));
+    
+    return results.map(row => ({
+      ...row.staff_services,
+      service: row.services!,
+    }));
+  }
+  
+  async createStaffService(staffService: InsertStaffServices): Promise<StaffServices> {
+    const [created] = await db.insert(staffServices).values(staffService).returning();
+    return created;
+  }
+  
+  async deleteStaffService(id: string): Promise<void> {
+    await db.delete(staffServices).where(eq(staffServices.id, id));
+  }
+  
+  async assignServiceToStaff(staffId: string, serviceId: string): Promise<StaffServices> {
+    const [created] = await db
+      .insert(staffServices)
+      .values({ staffId, serviceId })
+      .returning();
+    return created;
+  }
+  
+  async removeServiceFromStaff(staffId: string, serviceId: string): Promise<void> {
+    await db
+      .delete(staffServices)
+      .where(and(
+        eq(staffServices.staffId, staffId),
+        eq(staffServices.serviceId, serviceId)
+      ));
   }
   
   // Gallery operations

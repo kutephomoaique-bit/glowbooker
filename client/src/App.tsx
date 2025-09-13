@@ -16,6 +16,7 @@ import Account from "@/pages/account";
 import AdminDashboard from "@/pages/admin/dashboard";
 import AdminServices from "@/pages/admin/services";
 import AdminBookings from "@/pages/admin/bookings";
+import AdminStaff from "@/pages/admin/staff";
 import AdminGallery from "@/pages/admin/gallery";
 import AdminFeedback from "@/pages/admin/feedback";
 import AdminEvents from "@/pages/admin/events";
@@ -47,6 +48,7 @@ function Router() {
           <Route path="/admin" component={AdminDashboard} />
           <Route path="/admin/services" component={AdminServices} />
           <Route path="/admin/bookings" component={AdminBookings} />
+          <Route path="/admin/staff" component={AdminStaff} />
           <Route path="/admin/gallery" component={AdminGallery} />
           <Route path="/admin/feedback" component={AdminFeedback} />
           <Route path="/admin/events" component={AdminEvents} />

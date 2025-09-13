@@ -337,7 +337,7 @@ export default function AdminSettings() {
                     id="phone"
                     value={settingsForm.phone}
                     onChange={(e) => setSettingsForm(prev => ({ ...prev, phone: e.target.value }))}
-                    placeholder="(555) 123-4567"
+                    placeholder="+65 9712 1097"
                     data-testid="input-phone"
                   />
                 </div>
@@ -350,7 +350,7 @@ export default function AdminSettings() {
                     id="address"
                     value={settingsForm.address}
                     onChange={(e) => setSettingsForm(prev => ({ ...prev, address: e.target.value }))}
-                    placeholder="123 Beauty Street, City, State 12345"
+                    placeholder="Blk 483A Yishun Ave 6 Singapore 761483"
                     rows={2}
                     data-testid="textarea-address"
                   />
@@ -378,7 +378,7 @@ export default function AdminSettings() {
                     id="facebookUrl"
                     value={settingsForm.facebookUrl}
                     onChange={(e) => setSettingsForm(prev => ({ ...prev, facebookUrl: e.target.value }))}
-                    placeholder="https://facebook.com/your-page"
+                    placeholder="https://facebook.com/homebasebeauty"
                     data-testid="input-facebook"
                   />
                 </div>
@@ -392,7 +392,7 @@ export default function AdminSettings() {
                     id="instagramUrl"
                     value={settingsForm.instagramUrl}
                     onChange={(e) => setSettingsForm(prev => ({ ...prev, instagramUrl: e.target.value }))}
-                    placeholder="https://instagram.com/your-account"
+                    placeholder="https://instagram.com/homebasebeauty"
                     data-testid="input-instagram"
                   />
                 </div>
@@ -406,7 +406,7 @@ export default function AdminSettings() {
                     id="zaloUrl"
                     value={settingsForm.zaloUrl}
                     onChange={(e) => setSettingsForm(prev => ({ ...prev, zaloUrl: e.target.value }))}
-                    placeholder="https://zalo.me/your-account"
+                    placeholder="https://zalo.me/homebasebeauty"
                     data-testid="input-zalo"
                   />
                 </div>

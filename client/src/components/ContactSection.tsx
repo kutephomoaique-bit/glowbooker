@@ -73,9 +73,9 @@ export default function ContactSection({ contentSettings }: ContactSectionProps)
   };
 
   const contactInfo = {
-    address: contentSettings?.address || "123 Beauty Street, Luxury District, San Francisco, CA 94102",
-    phone: contentSettings?.phone || "(555) 123-4567",
-    email: "hello@serenitysalon.com",
+    address: contentSettings?.address || "Blk 483A Yishun Ave 6 Singapore 761483",
+    phone: contentSettings?.phone || "+65 9712 1097",
+    email: "kellybeautyhomebase@gmail.com",
     facebook: contentSettings?.facebookUrl || "#",
     instagram: contentSettings?.instagramUrl || "#",
     zalo: contentSettings?.zaloUrl || "#"
@@ -152,9 +152,7 @@ export default function ContactSection({ contentSettings }: ContactSectionProps)
                   <div>
                     <p className="font-medium text-foreground">Opening Hours</p>
                     <div className="text-muted-foreground text-sm" data-testid="hours-text">
-                      <p>Monday - Friday: 9:00 AM - 7:00 PM</p>
-                      <p>Saturday: 9:00 AM - 6:00 PM</p>
-                      <p>Sunday: 10:00 AM - 5:00 PM</p>
+                      <p>Mon–Sun: 11:00AM – 7:00PM</p>
                     </div>
                   </div>
                 </div>

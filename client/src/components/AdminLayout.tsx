@@ -30,6 +30,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     { name: 'Dashboard', href: '/admin', icon: Home },
     { name: 'Services', href: '/admin/services', icon: Sparkles },
     { name: 'Bookings', href: '/admin/bookings', icon: Calendar },
+    { name: 'Staff', href: '/admin/staff', icon: Users },
     { name: 'Gallery', href: '/admin/gallery', icon: Image },
     { name: 'Feedback', href: '/admin/feedback', icon: MessageSquare },
     { name: 'Events', href: '/admin/events', icon: Star },

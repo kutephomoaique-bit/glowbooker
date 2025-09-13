@@ -54,9 +54,18 @@ export default function Booking() {
     queryKey: ["/api/services"],
   });
 
-  const { data: staff = [] } = useQuery({
+  const { data: allStaff = [] } = useQuery({
     queryKey: ["/api/staff"],
   });
+
+  // Get staff filtered by selected service
+  const { data: serviceStaff = [] } = useQuery({
+    queryKey: ["/api/staff/by-service", selectedService],
+    enabled: !!selectedService,
+  });
+
+  // Use service-specific staff if available, otherwise all staff
+  const availableStaff = selectedService ? serviceStaff : allStaff;
 
   const { data: contentSettings } = useQuery({
     queryKey: ["/api/content-settings"],
@@ -64,20 +73,57 @@ export default function Booking() {
 
   const selectedServiceData = services.find((s: any) => s.id === selectedService);
 
-  // Generate available time slots
+  // Generate available time slots based on staff availability
   const generateTimeSlots = () => {
-    const slots = [];
-    const openHour = 9;
-    const closeHour = 19;
-    
-    for (let hour = openHour; hour < closeHour; hour++) {
-      slots.push(`${hour.toString().padStart(2, '0')}:00`);
-      if (hour < closeHour - 1) {
-        slots.push(`${hour.toString().padStart(2, '0')}:30`);
+    if (!selectedDate || availableStaff.length === 0) {
+      // Default slots if no date selected or no staff available
+      const slots = [];
+      const openHour = 9;
+      const closeHour = 19;
+      
+      for (let hour = openHour; hour < closeHour; hour++) {
+        slots.push(`${hour.toString().padStart(2, '0')}:00`);
+        if (hour < closeHour - 1) {
+          slots.push(`${hour.toString().padStart(2, '0')}:30`);
+        }
       }
+      return slots;
     }
+
+    // Get day of week for selected date
+    const dayNames = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
+    const dayOfWeek = dayNames[selectedDate.getDay()];
     
-    return slots;
+    // Find available time slots based on staff availability
+    const availableSlots = new Set<string>();
+    
+    availableStaff.forEach((staff: any) => {
+      const dayAvailability = staff.availability?.find((a: any) => 
+        a.dayOfWeek === dayOfWeek && a.isActive
+      );
+      
+      if (dayAvailability) {
+        const startHour = parseInt(dayAvailability.startTime.split(':')[0]);
+        const endHour = parseInt(dayAvailability.endTime.split(':')[0]);
+        const startMinute = parseInt(dayAvailability.startTime.split(':')[1]);
+        const endMinute = parseInt(dayAvailability.endTime.split(':')[1]);
+        
+        // Generate 30-minute slots within staff availability
+        for (let hour = startHour; hour <= endHour; hour++) {
+          if (hour === startHour && startMinute > 0) {
+            if (startMinute <= 30) availableSlots.add(`${hour.toString().padStart(2, '0')}:30`);
+          } else if (hour === endHour) {
+            if (endMinute > 0) availableSlots.add(`${hour.toString().padStart(2, '0')}:00`);
+            if (endMinute > 30) availableSlots.add(`${hour.toString().padStart(2, '0')}:30`);
+          } else if (hour < endHour) {
+            availableSlots.add(`${hour.toString().padStart(2, '0')}:00`);
+            availableSlots.add(`${hour.toString().padStart(2, '0')}:30`);
+          }
+        }
+      }
+    });
+    
+    return Array.from(availableSlots).sort();
   };
 
   const timeSlots = generateTimeSlots();
@@ -231,24 +277,36 @@ export default function Booking() {
                     </RadioGroup>
                   </div>
                   
-                  {staff.length > 0 && (
+                  {availableStaff.length > 0 && (
                     <div>
                       <Label className="text-sm font-semibold text-foreground mb-3 block">
-                        Preferred Staff (Optional)
+                        {selectedService ? 'Available Staff' : 'Preferred Staff'} {!selectedService && '(Optional)'}
                       </Label>
                       <Select value={selectedStaff} onValueChange={setSelectedStaff} data-testid="staff-selection">
                         <SelectTrigger>
-                          <SelectValue placeholder="Any available staff" />
+                          <SelectValue placeholder={selectedService ? "Select staff member" : "Any available staff"} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">Any available staff</SelectItem>
-                          {staff.map((member: any) => (
+                          {!selectedService && <SelectItem value="">Any available staff</SelectItem>}
+                          {availableStaff.map((member: any) => (
                             <SelectItem key={member.id} value={member.id} data-testid={`staff-option-${member.id}`}>
-                              {member.name}
+                              <div className="flex items-center justify-between w-full">
+                                <span>{member.name}</span>
+                                {member.position && (
+                                  <span className="text-xs text-muted-foreground ml-2">
+                                    {member.position}
+                                  </span>
+                                )}
+                              </div>
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
+                      {selectedService && availableStaff.length === 0 && (
+                        <p className="text-sm text-muted-foreground mt-2">
+                          No staff members are currently available for this service.
+                        </p>
+                      )}
                     </div>
                   )}
                   
@@ -284,20 +342,36 @@ export default function Booking() {
                   
                   <div>
                     <Label className="text-sm font-semibold text-foreground mb-3 block">
-                      Preferred Time *
+                      Available Time Slots *
                     </Label>
-                    <Select value={selectedTime} onValueChange={setSelectedTime} data-testid="time-selection">
+                    <Select 
+                      value={selectedTime} 
+                      onValueChange={setSelectedTime} 
+                      data-testid="time-selection"
+                      disabled={!selectedDate}
+                    >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select time" />
+                        <SelectValue placeholder={selectedDate ? "Select time" : "Select date first"} />
                       </SelectTrigger>
                       <SelectContent>
-                        {timeSlots.map((time) => (
-                          <SelectItem key={time} value={time} data-testid={`time-option-${time}`}>
-                            {time}
+                        {timeSlots.length > 0 ? (
+                          timeSlots.map((time) => (
+                            <SelectItem key={time} value={time} data-testid={`time-option-${time}`}>
+                              {time}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="" disabled>
+                            {selectedDate ? 'No available times for this date' : 'Select a date first'}
                           </SelectItem>
-                        ))}
+                        )}
                       </SelectContent>
                     </Select>
+                    {selectedDate && timeSlots.length === 0 && (
+                      <p className="text-sm text-muted-foreground mt-2">
+                        No staff members are available on this day. Please select a different date.
+                      </p>
+                    )}
                   </div>
                 </div>
                 
@@ -390,7 +464,7 @@ export default function Booking() {
                 <MapPin className="w-8 h-8 text-primary mx-auto mb-3" />
                 <h3 className="font-semibold text-foreground mb-2">Location</h3>
                 <p className="text-sm text-muted-foreground">
-                  {contentSettings?.address || "123 Beauty Street, Luxury District"}
+                  {contentSettings?.address || "Blk 483A Yishun Ave 6 Singapore 761483"}
                 </p>
               </CardContent>
             </Card>
@@ -400,9 +474,7 @@ export default function Booking() {
                 <Clock className="w-8 h-8 text-primary mx-auto mb-3" />
                 <h3 className="font-semibold text-foreground mb-2">Hours</h3>
                 <p className="text-sm text-muted-foreground">
-                  Mon-Fri: 9AM-7PM<br />
-                  Sat: 9AM-6PM<br />
-                  Sun: 10AM-5PM
+                  Mon–Sun: 11:00AM – 7:00PM
                 </p>
               </CardContent>
             </Card>
@@ -412,7 +484,7 @@ export default function Booking() {
                 <User className="w-8 h-8 text-primary mx-auto mb-3" />
                 <h3 className="font-semibold text-foreground mb-2">Contact</h3>
                 <p className="text-sm text-muted-foreground">
-                  {contentSettings?.phone || "(555) 123-4567"}
+                  {contentSettings?.phone || "+65 9712 1097"}
                 </p>
               </CardContent>
             </Card>
