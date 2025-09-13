@@ -19,19 +19,19 @@ export default function Landing() {
     queryKey: ["/api/content-settings"],
   });
 
-  const { data: services } = useQuery<Service[]>({
+  const { data: services } = useQuery<any[]>({
     queryKey: ["/api/services"],
   });
 
-  const { data: promotions } = useQuery<EventPromo[]>({
+  const { data: promotions } = useQuery<any[]>({
     queryKey: ["/api/promotions"],
   });
 
-  const { data: gallery } = useQuery<GalleryImage[]>({
+  const { data: gallery } = useQuery<any[]>({
     queryKey: ["/api/gallery"],
   });
 
-  const { data: feedback } = useQuery<Feedback[]>({
+  const { data: feedback } = useQuery<any[]>({
     queryKey: ["/api/feedback"],
   });
 
