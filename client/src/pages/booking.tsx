@@ -26,7 +26,6 @@ export default function Booking() {
   const queryClient = useQueryClient();
 
   const [selectedService, setSelectedService] = useState("");
-  const [selectedStaff, setSelectedStaff] = useState("");
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [selectedTime, setSelectedTime] = useState("");
   const [customerInfo, setCustomerInfo] = useState({
@@ -54,18 +53,6 @@ export default function Booking() {
     queryKey: ["/api/services"],
   });
 
-  const { data: allStaff = [] } = useQuery<any[]>({
-    queryKey: ["/api/staff"],
-  });
-
-  // Get staff filtered by selected service
-  const { data: serviceStaff = [] } = useQuery<any[]>({
-    queryKey: ["/api/staff/by-service", selectedService],
-    enabled: !!selectedService,
-  });
-
-  // Use service-specific staff if available, otherwise all staff
-  const availableStaff = selectedService ? serviceStaff : allStaff;
 
   const { data: contentSettings = {} } = useQuery<any>({
     queryKey: ["/api/content-settings"],
@@ -73,57 +60,19 @@ export default function Booking() {
 
   const selectedServiceData = services.find((s: any) => s.id === selectedService);
 
-  // Generate available time slots based on staff availability
+  // Generate available time slots during salon operating hours (11:00 AM - 7:00 PM)
   const generateTimeSlots = () => {
-    if (!selectedDate || availableStaff.length === 0) {
-      // Default slots if no date selected or no staff available
-      const slots = [];
-      const openHour = 9;
-      const closeHour = 19;
-      
-      for (let hour = openHour; hour < closeHour; hour++) {
-        slots.push(`${hour.toString().padStart(2, '0')}:00`);
-        if (hour < closeHour - 1) {
-          slots.push(`${hour.toString().padStart(2, '0')}:30`);
-        }
+    const slots = [];
+    const openHour = 11; // 11:00 AM
+    const closeHour = 19; // 7:00 PM
+    
+    for (let hour = openHour; hour < closeHour; hour++) {
+      slots.push(`${hour.toString().padStart(2, '0')}:00`);
+      if (hour < closeHour - 1) {
+        slots.push(`${hour.toString().padStart(2, '0')}:30`);
       }
-      return slots;
     }
-
-    // Get day of week for selected date
-    const dayNames = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
-    const dayOfWeek = dayNames[selectedDate.getDay()];
-    
-    // Find available time slots based on staff availability
-    const availableSlots = new Set<string>();
-    
-    availableStaff.forEach((staff: any) => {
-      const dayAvailability = staff.availability?.find((a: any) => 
-        a.dayOfWeek === dayOfWeek && a.isActive
-      );
-      
-      if (dayAvailability) {
-        const startHour = parseInt(dayAvailability.startTime.split(':')[0]);
-        const endHour = parseInt(dayAvailability.endTime.split(':')[0]);
-        const startMinute = parseInt(dayAvailability.startTime.split(':')[1]);
-        const endMinute = parseInt(dayAvailability.endTime.split(':')[1]);
-        
-        // Generate 30-minute slots within staff availability
-        for (let hour = startHour; hour <= endHour; hour++) {
-          if (hour === startHour && startMinute > 0) {
-            if (startMinute <= 30) availableSlots.add(`${hour.toString().padStart(2, '0')}:30`);
-          } else if (hour === endHour) {
-            if (endMinute > 0) availableSlots.add(`${hour.toString().padStart(2, '0')}:00`);
-            if (endMinute > 30) availableSlots.add(`${hour.toString().padStart(2, '0')}:30`);
-          } else if (hour < endHour) {
-            availableSlots.add(`${hour.toString().padStart(2, '0')}:00`);
-            availableSlots.add(`${hour.toString().padStart(2, '0')}:30`);
-          }
-        }
-      }
-    });
-    
-    return Array.from(availableSlots).sort();
+    return slots;
   };
 
   const timeSlots = generateTimeSlots();
@@ -146,7 +95,6 @@ export default function Booking() {
       
       // Reset form
       setSelectedService("");
-      setSelectedStaff("");
       setSelectedDate(undefined);
       setSelectedTime("");
       setCustomerInfo({
@@ -183,7 +131,7 @@ export default function Booking() {
     const bookingData = {
       userId: user?.id || null,
       serviceId: selectedService,
-      staffId: selectedStaff || null,
+      staffId: null,
       dateTime: bookingDateTime.toISOString(),
       durationMins: selectedServiceData?.durationMins || 60,
       customerName: customerInfo.name,
@@ -277,39 +225,6 @@ export default function Booking() {
                     </RadioGroup>
                   </div>
                   
-                  {availableStaff.length > 0 && (
-                    <div>
-                      <Label className="text-sm font-semibold text-foreground mb-3 block">
-                        {selectedService ? 'Available Staff' : 'Preferred Staff'} {!selectedService && '(Optional)'}
-                      </Label>
-                      <Select value={selectedStaff} onValueChange={setSelectedStaff} data-testid="staff-selection">
-                        <SelectTrigger>
-                          <SelectValue placeholder={selectedService ? "Select staff member" : "Any available staff"} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {!selectedService && <SelectItem value="">Any available staff</SelectItem>}
-                          {availableStaff.map((member: any) => (
-                            <SelectItem key={member.id} value={member.id} data-testid={`staff-option-${member.id}`}>
-                              <div className="flex items-center justify-between w-full">
-                                <span>{member.name}</span>
-                                {member.position && (
-                                  <span className="text-xs text-muted-foreground ml-2">
-                                    {member.position}
-                                  </span>
-                                )}
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      {selectedService && availableStaff.length === 0 && (
-                        <p className="text-sm text-muted-foreground mt-2">
-                          No staff members are currently available for this service.
-                        </p>
-                      )}
-                    </div>
-                  )}
-                  
                   <div>
                     <Label className="text-sm font-semibold text-foreground mb-3 block">
                       Preferred Date *
@@ -369,7 +284,7 @@ export default function Booking() {
                     </Select>
                     {selectedDate && timeSlots.length === 0 && (
                       <p className="text-sm text-muted-foreground mt-2">
-                        No staff members are available on this day. Please select a different date.
+                        No available time slots for this date. Please select a different date.
                       </p>
                     )}
                   </div>
