@@ -3,6 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import AdminLayout from "@/components/AdminLayout";
+import CalendarView from "@/components/CalendarView";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -486,69 +487,11 @@ export default function AdminBookings() {
 
           {/* Calendar Tab */}
           <TabsContent value="calendar" data-testid="tab-content-calendar">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Select Date</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={setSelectedDate}
-                    className="rounded-md border"
-                    data-testid="calendar-picker"
-                  />
-                </CardContent>
-              </Card>
-              
-              <div className="lg:col-span-2">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>
-                      {selectedDate ? `Appointments for ${format(selectedDate, 'MMMM dd, yyyy')}` : 'Select a date'}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {selectedDate ? (
-                      <div className="space-y-4" data-testid="calendar-bookings-list">
-                        {filteredBookings.length > 0 ? (
-                          filteredBookings.map((booking: any) => (
-                            <div 
-                              key={booking.id} 
-                              className="p-4 border rounded-lg"
-                              data-testid={`calendar-booking-${booking.id}`}
-                            >
-                              <div className="flex items-center justify-between">
-                                <div>
-                                  <h3 className="font-semibold" data-testid={`calendar-service-${booking.id}`}>
-                                    {booking.service.name}
-                                  </h3>
-                                  <p className="text-sm text-muted-foreground" data-testid={`calendar-details-${booking.id}`}>
-                                    {booking.customerName || booking.user?.firstName || 'Guest'} • {format(new Date(booking.dateTime), 'h:mm a')}
-                                  </p>
-                                </div>
-                                <Badge className={getStatusColor(booking.status)} data-testid={`calendar-status-${booking.id}`}>
-                                  {booking.status}
-                                </Badge>
-                              </div>
-                            </div>
-                          ))
-                        ) : (
-                          <p className="text-center text-muted-foreground py-8" data-testid="no-calendar-bookings">
-                            No appointments scheduled for this date.
-                          </p>
-                        )}
-                      </div>
-                    ) : (
-                      <p className="text-center text-muted-foreground py-8" data-testid="select-date-prompt">
-                        Select a date from the calendar to view appointments.
-                      </p>
-                    )}
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
+            <CalendarView 
+              bookings={bookings}
+              onUpdateBookingStatus={updateBookingStatus}
+              onEditBooking={openEditDialog}
+            />
           </TabsContent>
         </Tabs>
 
