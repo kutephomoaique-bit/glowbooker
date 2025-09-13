@@ -50,16 +50,16 @@ export default function Booking() {
     }
   }, [user]);
 
-  const { data: services = [] } = useQuery({
+  const { data: services = [] } = useQuery<any[]>({
     queryKey: ["/api/services"],
   });
 
-  const { data: allStaff = [] } = useQuery({
+  const { data: allStaff = [] } = useQuery<any[]>({
     queryKey: ["/api/staff"],
   });
 
   // Get staff filtered by selected service
-  const { data: serviceStaff = [] } = useQuery({
+  const { data: serviceStaff = [] } = useQuery<any[]>({
     queryKey: ["/api/staff/by-service", selectedService],
     enabled: !!selectedService,
   });
@@ -67,7 +67,7 @@ export default function Booking() {
   // Use service-specific staff if available, otherwise all staff
   const availableStaff = selectedService ? serviceStaff : allStaff;
 
-  const { data: contentSettings } = useQuery({
+  const { data: contentSettings = {} } = useQuery<any>({
     queryKey: ["/api/content-settings"],
   });
 
