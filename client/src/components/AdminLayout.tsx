@@ -65,7 +65,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               <div className="w-8 h-8 luxury-gradient rounded-full flex items-center justify-center">
                 <span className="text-white text-sm">✨</span>
               </div>
-              <span className="text-lg font-serif font-bold text-primary">Serenity</span>
+              <span className="text-lg font-serif font-bold text-primary">HOME BASE</span>
             </Link>
             <Button
               variant="ghost"

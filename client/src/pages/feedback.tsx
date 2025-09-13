@@ -28,7 +28,7 @@ export default function Feedback() {
   });
 
   useEffect(() => {
-    document.title = "Leave Feedback - Serenity Beauty Salon";
+    document.title = "Leave Feedback - HOME BASE Beauty Salon";
     
     // Pre-fill customer name if logged in
     if (user) {

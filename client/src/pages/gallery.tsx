@@ -11,7 +11,7 @@ export default function Gallery() {
   const [selectedImage, setSelectedImage] = useState<any>(null);
 
   useEffect(() => {
-    document.title = "Gallery - Serenity Beauty Salon";
+    document.title = "Gallery - HOME BASE Beauty Salon";
   }, []);
 
   const { data: images = [], isLoading } = useQuery({

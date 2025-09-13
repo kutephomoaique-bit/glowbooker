@@ -37,7 +37,7 @@ export default function Booking() {
   });
 
   useEffect(() => {
-    document.title = "Book Appointment - Serenity Beauty Salon";
+    document.title = "Book Appointment - HOME BASE Beauty Salon";
     
     // Pre-fill customer info if logged in
     if (user) {

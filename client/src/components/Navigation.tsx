@@ -42,7 +42,7 @@ export default function Navigation() {
             <div className="w-10 h-10 luxury-gradient rounded-full flex items-center justify-center">
               <span className="text-white text-lg">✨</span>
             </div>
-            <span className="text-2xl font-serif font-bold text-primary">Serenity</span>
+            <span className="text-2xl font-serif font-bold text-primary">HOME BASE</span>
           </Link>
           
           {/* Desktop Navigation */}

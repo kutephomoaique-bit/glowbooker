@@ -539,7 +539,7 @@ export default function AdminSettings() {
                   id="seoTitle"
                   value={settingsForm.seo.title}
                   onChange={(e) => updateSeo('title', e.target.value)}
-                  placeholder="Serenity Beauty Salon - Luxury Nail, Eyelash & Facial Services"
+                  placeholder="HOME BASE Beauty Salon - Luxury Nail, Eyelash & Facial Services"
                   data-testid="input-seo-title"
                 />
               </div>

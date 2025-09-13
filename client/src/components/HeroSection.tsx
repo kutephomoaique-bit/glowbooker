@@ -11,7 +11,7 @@ export default function HeroSection({ contentSettings, showWelcome = true }: Her
   const slogans = contentSettings?.slogans || [
     "Elegance in Every Detail",
     "Your Beauty, Perfectly Timed", 
-    "Serenity • Shine • Sophistication"
+    "HOME BASE • Shine • Sophistication"
   ];
 
   if (!showWelcome) {

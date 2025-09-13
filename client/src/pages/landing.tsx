@@ -12,7 +12,7 @@ import Footer from "@/components/Footer";
 
 export default function Landing() {
   useEffect(() => {
-    document.title = "Serenity Beauty Salon - Luxury Nail, Eyelash & Facial Services";
+    document.title = "HOME BASE Beauty Salon - Luxury Nail, Eyelash & Facial Services";
   }, []);
 
   const { data: contentSettings } = useQuery<ContentSettings>({

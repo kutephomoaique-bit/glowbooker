@@ -24,7 +24,7 @@ export default function AdminDashboard() {
   const { toast } = useToast();
 
   useEffect(() => {
-    document.title = "Admin Dashboard - Serenity Beauty Salon";
+    document.title = "Admin Dashboard - HOME BASE Beauty Salon";
     
     if (!isLoading && (!isAuthenticated || user?.role !== 'ADMIN')) {
       toast({

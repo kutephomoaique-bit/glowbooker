@@ -18,7 +18,7 @@ export default function Home() {
   const { user } = useAuth();
 
   useEffect(() => {
-    document.title = "Serenity Beauty Salon - Welcome Back";
+    document.title = "HOME BASE Beauty Salon - Welcome Back";
   }, []);
 
   const { data: contentSettings } = useQuery({

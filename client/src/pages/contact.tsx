@@ -32,7 +32,7 @@ export default function Contact() {
   });
 
   useEffect(() => {
-    document.title = "Contact Us - Serenity Beauty Salon";
+    document.title = "Contact Us - HOME BASE Beauty Salon";
   }, []);
 
   const { data: contentSettings } = useQuery({

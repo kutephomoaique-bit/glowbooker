@@ -27,7 +27,7 @@ export default function Account() {
   const { toast } = useToast();
 
   useEffect(() => {
-    document.title = "My Account - Serenity Beauty Salon";
+    document.title = "My Account - HOME BASE Beauty Salon";
     
     if (!isLoading && !isAuthenticated) {
       toast({

@@ -24,7 +24,7 @@ export default function Footer({ contentSettings }: FooterProps) {
               <div className="w-10 h-10 luxury-gradient rounded-full flex items-center justify-center">
                 <span className="text-white text-lg">✨</span>
               </div>
-              <span className="text-2xl font-serif font-bold text-primary">Serenity</span>
+              <span className="text-2xl font-serif font-bold text-primary">HOME BASE</span>
             </Link>
             <p className="text-background/80 mb-6 max-w-md" data-testid="footer-description">
               Your premier destination for luxury beauty services. Experience elegance in every detail with our professional nail, eyelash, and facial treatments.
@@ -113,7 +113,7 @@ export default function Footer({ contentSettings }: FooterProps) {
         
         <div className="border-t border-background/20 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
           <p className="text-background/60 text-sm" data-testid="footer-copyright">
-            © 2024 Serenity Beauty Salon. All rights reserved.
+            © 2024 HOME BASE Beauty Salon. All rights reserved.
           </p>
           <div className="flex space-x-6 text-background/60 text-sm mt-4 md:mt-0" data-testid="footer-legal-links">
             <a href="#" className="hover:text-primary transition-colors" data-testid="footer-privacy">

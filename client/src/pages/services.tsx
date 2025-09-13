@@ -11,7 +11,7 @@ import { Sparkles, Eye, Leaf, Clock, Star } from "lucide-react";
 
 export default function Services() {
   useEffect(() => {
-    document.title = "Services - Serenity Beauty Salon";
+    document.title = "Services - HOME BASE Beauty Salon";
   }, []);
 
   const { data: services = [], isLoading } = useQuery({
