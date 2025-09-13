@@ -1,0 +1,185 @@
+Replit Prompt – Beauty Booking Website (nail • Eyelash • Facial)
+
+Build a full-stack beauty salon booking website for a shop specializing in Nail, Eyelash, Facial. Use a modern stack that runs well on Replit.
+
+Tech Stack (required)
+
+Next.js 14 (App Router) + TypeScript
+
+Tailwind CSS + shadcn/ui for a clean, luxurious UI; primary brand color: pink with gold-like accents (no real gold color needed—use neutral/stone + subtle gradients and shadows to feel premium)
+
+Prisma ORM with SQLite by default (easy on Replit). Keep DB models ready to switch to Postgres later via env var.
+
+NextAuth (Credentials provider: email + password). Roles: ADMIN, CUSTOMER.
+
+Zod for validation, React Hook Form for forms.
+
+Upload support for images: integrate Cloudinary via env var; if no keys are set, save to a local /public/uploads (dev fallback only).
+
+Pages & Navigation (must have)
+
+Home (/)
+
+Hero banner with luxury vibe in pink theme.
+
+Short intro of the salon, highlight services: Nail • Eyelash • Facial.
+
+Section to show active promotions / events (discounts, limited-time offers) pulled dynamically from DB.
+
+Carousel/grid for featured images from the Gallery.
+
+2–3 elegant slogans (placeholders) and editable in Admin.
+
+CTA buttons: Book Now, View Services.
+
+Services (/services)
+
+Tabs or cards for Nail, Eyelash, Facial.
+
+Each service has: name, description, base price, duration, optional add-ons.
+
+Dynamic Pricing: show current effective price = base price +/- event discount. If an event is active, display discount badge and crossed-out base price.
+
+Admin-editable rich text for descriptions.
+
+Booking (/booking)
+
+Booking flow: choose service → staff (optional) → date/time (respect shop hours, staff availability, slot duration) → customer info → confirm & pay-later (no payment integration yet).
+
+If logged in as CUSTOMER, preload saved profile (name, phone, email) and show My Bookings section.
+
+After booking, send confirmation email placeholder function (no real SMTP needed; just console log and show on-screen confirmation). Keep code structured to plug in email provider later.
+
+Auth
+
+Login (/login) and Register (/register) using NextAuth Credentials. Store hashed passwords.
+
+Profile page (/account) to view/edit customer info and see past/upcoming bookings.
+
+Gallery (/gallery)
+
+Grid of images (Nail, Eyelash, Facial). Filter by category. Lightbox viewer.
+
+Admin can upload new photos, set cover images, and order them.
+
+Feedback (/feedback)
+
+Public form for customers to submit reviews/feedback (rating 1–5, title, comment, optional images).
+
+Moderation: feedback is pending until an ADMIN approves in the dashboard. Only approved feedback appears on the site.
+
+Contact (/contact)
+
+Display shop Facebook, Zalo, Instagram, Phone Number as clickable icons/buttons.
+
+Contact form (name, phone, message). Store submissions to DB.
+
+Map embed placeholder (component with address).
+
+Footer (site-wide)
+
+Show shop address (editable in Admin), contact links (Facebook, Zalo, Instagram, Phone Number), opening hours, and copyright.
+
+Admin Dashboard (/admin) – protected, ADMIN only
+
+Overview: quick stats (bookings this week, upcoming appointments, pending reviews).
+
+Services Manager: CRUD for categories (Nail/Eyelash/Facial) and services (name, slug, description, base price, duration, is_active).
+
+Events/Promotions: CRUD for discount campaigns with fields: title, description, service/category scope, discount type (percent/amount), value, start_at, end_at, is_active. Auto-apply to prices.
+
+Gallery Manager: upload/delete images, set categories & captions, drag-to-reorder.
+
+Feedback Manager: list pending reviews, Approve/Reject, edit text, toggle featured.
+
+Bookings: view calendar, change status (pending/confirmed/cancelled/done), reassign staff/time.
+
+Content Settings: edit slogans (array of strings), shop address, socials, opening hours, hero images, SEO meta.
+
+Users: view customers, set roles.
+
+Data Models (Prisma – create schema.prisma accordingly)
+
+User: id, name, email (unique), phone, passwordHash, role (ADMIN|CUSTOMER), createdAt
+
+ServiceCategory: id, name (Nail/Eyelash/Facial), slug, order
+
+Service: id, categoryId, name, slug, description, basePrice (int or decimal), durationMins, isActive
+
+EventPromo: id, title, description, discountType (PERCENT|AMOUNT), value, startAt, endAt, scopeType (GLOBAL|CATEGORY|SERVICE), scopeId (nullable), isActive
+
+Staff (optional but ready): id, name, bio, skills (string[]), isActive
+
+Booking: id, userId (nullable for guest), serviceId, staffId (nullable), dateTime, durationMins, status (PENDING|CONFIRMED|CANCELLED|DONE), notes, createdAt
+
+GalleryImage: id, url, category (Nail|Eyelash|Facial|General), caption, order
+
+Feedback: id, userId (nullable), rating (1–5), title, comment, imageUrls (string[]), status (PENDING|APPROVED|REJECTED), createdAt
+
+ContactMessage: id, name, phone, message, createdAt, handled (boolean)
+
+ContentSetting: id (singleton), slogans (string[]), address, facebookUrl, zaloUrl, instagramUrl, phone, openingHours, heroImages (string[]), seo (json)
+
+Add indexes where appropriate.
+
+Key Behaviors
+
+Dynamic Pricing & Events: A server function should compute the effective price for a service given EventPromos (active now and matching scope). Show both original and discounted price if a promo applies.
+
+Admin-only moderation for Feedback before public display.
+
+Image uploads via Cloudinary if env exists; otherwise save to /public/uploads.
+
+Role-based UI: hide admin links for non-admins; 403 on direct access.
+
+Fully responsive and accessible; use semantic HTML + good contrast in the pink theme.
+
+Styling & Branding
+
+Primary color: pink (#ec4899 or similar). Complement with neutrals, subtle shadows, rounded-2xl cards, tasteful gradients for a luxurious look.
+
+Use shadcn/ui components (Card, Button, Tabs, Badge, Dialog, Form).
+
+Include 3 sample slogans as seed data in ContentSetting, e.g.:
+
+"Elegance in Every Detail"
+
+"Your Beauty, Perfectly Timed"
+
+"Serenity • Shine • Sophistication"
+
+Seed Data & Demo
+
+Seed script to create: an ADMIN user, 3 categories (Nail/Eyelash/Facial), some sample services, one active promo, a few gallery images, and example feedback (pending + approved).
+
+Provide default socials and address placeholders that I can edit in Admin.
+
+Env Vars & Config
+
+.env template with:
+
+DATABASE_URL (SQLite by default)
+
+NEXTAUTH_SECRET
+
+CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET (optional)
+
+Include clear README steps for Replit: install, migrate, seed, dev run.
+
+Nice-to-haves (if quick)
+
+Calendar view for admin bookings
+
+Simple availability rules by staff
+
+Basic sitemap + OpenGraph images
+
+Deliverables
+
+A single Next.js app ready to run on Replit with the above pages, admin dashboard, Prisma models, and seed script.
+
+Clean, commented code. Make sure form labels and fields can be easily switched to Vietnamese later.
+
+Ensure the footer always shows the shop address and the Contact page includes Facebook, Zalo, Instagram, and Phone.
+
+Start building now.
