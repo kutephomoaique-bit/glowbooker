@@ -51,7 +51,7 @@ export default function AdminGallery() {
     }
   }, [isAuthenticated, isLoading, user, toast]);
 
-  const { data: images = [], error: imagesError } = useQuery({
+  const { data: images = [], error: imagesError } = useQuery<any[]>({
     queryKey: ["/api/gallery"],
     enabled: isAuthenticated && user?.role === 'ADMIN',
     retry: false,
@@ -249,7 +249,7 @@ export default function AdminGallery() {
   const handleUploadComplete = (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
     if (result.successful && result.successful.length > 0) {
       const uploadedFile = result.successful[0];
-      setUploadedImageUrl(uploadedFile.uploadURL);
+      setUploadedImageUrl((uploadedFile as any).uploadURL || '');
       toast({
         title: "Upload Complete",
         description: "File uploaded successfully! Fill in the details below to add it to your gallery.",
