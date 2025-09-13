@@ -16,6 +16,11 @@ import {
   insertContentSettingsSchema,
 } from "@shared/schema";
 import { calculateEffectivePrice } from "../client/src/lib/pricing";
+import {
+  ObjectStorageService,
+  ObjectNotFoundError,
+} from "./objectStorage";
+import { ObjectPermission } from "./objectAcl";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
@@ -201,6 +206,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Object Storage routes - Public file serving
+  app.get("/public-objects/:filePath(*)", async (req, res) => {
+    const filePath = req.params.filePath;
+    const objectStorageService = new ObjectStorageService();
+    try {
+      const file = await objectStorageService.searchPublicObject(filePath);
+      if (!file) {
+        return res.status(404).json({ error: "File not found" });
+      }
+      objectStorageService.downloadObject(file, res);
+    } catch (error) {
+      console.error("Error searching for public object:", error);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Object Storage routes - Protected file serving (public objects with ACL)
+  app.get("/objects/:objectPath(*)", async (req, res) => {
+    const objectStorageService = new ObjectStorageService();
+    try {
+      const objectFile = await objectStorageService.getObjectEntityFile(req.path);
+      // For gallery images, we want them to be publicly accessible for viewing
+      // but only admin-uploadable, so we don't require authentication for read access
+      objectStorageService.downloadObject(objectFile, res);
+    } catch (error) {
+      console.error("Error accessing object:", error);
+      if (error instanceof ObjectNotFoundError) {
+        return res.sendStatus(404);
+      }
+      return res.sendStatus(500);
+    }
+  });
+
   // Protected routes - Customer bookings
   app.get('/api/my-bookings', isAuthenticated, async (req: any, res) => {
     try {
@@ -355,6 +393,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating booking:", error);
       res.status(500).json({ message: "Failed to update booking" });
+    }
+  });
+
+  // Admin routes - Object Storage Upload
+  app.post("/api/objects/upload", isAuthenticated, isAdmin, async (req, res) => {
+    const objectStorageService = new ObjectStorageService();
+    try {
+      const uploadURL = await objectStorageService.getObjectEntityUploadURL();
+      res.json({ uploadURL });
+    } catch (error) {
+      console.error("Error generating upload URL:", error);
+      res.status(500).json({ error: "Failed to generate upload URL" });
+    }
+  });
+
+  // Admin routes - Gallery Image Upload (set ACL after upload)
+  app.put("/api/admin/gallery-upload", isAuthenticated, isAdmin, async (req: any, res) => {
+    if (!req.body.imageURL || !req.body.category || !req.body.caption) {
+      return res.status(400).json({ error: "imageURL, category, and caption are required" });
+    }
+
+    const userId = req.user.claims.sub;
+
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const objectPath = await objectStorageService.trySetObjectEntityAclPolicy(
+        req.body.imageURL,
+        {
+          owner: userId,
+          visibility: "public", // Gallery images should be publicly viewable
+        }
+      );
+
+      // Create database record with the normalized object path
+      const imageData = insertGalleryImageSchema.parse({
+        url: objectPath,
+        category: req.body.category,
+        caption: req.body.caption,
+        order: req.body.order || 0
+      });
+      
+      const image = await storage.createGalleryImage(imageData);
+      res.status(200).json({
+        objectPath: objectPath,
+        image: image
+      });
+    } catch (error) {
+      console.error("Error setting gallery image:", error);
+      res.status(500).json({ error: "Failed to save gallery image" });
     }
   });
 

@@ -5,74 +5,91 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import type { GalleryImage, ContentSettings } from "@shared/schema";
 
 export default function Gallery() {
   const [activeFilter, setActiveFilter] = useState<string>('all');
-  const [selectedImage, setSelectedImage] = useState<any>(null);
+  const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null);
 
   useEffect(() => {
     document.title = "Gallery - HOME BASE Beauty Salon";
   }, []);
 
-  const { data: images = [], isLoading } = useQuery({
+  const { data: images = [], isLoading } = useQuery<GalleryImage[]>({
     queryKey: activeFilter === 'all' ? ["/api/gallery"] : ["/api/gallery", { category: activeFilter }],
   });
 
-  const { data: contentSettings } = useQuery({
+  const { data: contentSettings } = useQuery<ContentSettings>({
     queryKey: ["/api/content-settings"],
   });
 
   const categories = ['all', 'Nail', 'Eyelash', 'Facial'];
   
   // Fallback images if no images are provided
-  const fallbackImages = [
+  const fallbackImages: GalleryImage[] = [
     {
       id: '1',
       url: "https://images.unsplash.com/photo-1632345031435-8727f6897d53?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=600",
-      category: 'Nail',
-      caption: "Elegant nail art designs"
+      category: 'Nail' as const,
+      caption: "Elegant nail art designs",
+      order: 0,
+      createdAt: new Date()
     },
     {
       id: '2', 
       url: "https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=600",
-      category: 'Eyelash',
-      caption: "Beautiful eyelash extensions"
+      category: 'Eyelash' as const,
+      caption: "Beautiful eyelash extensions",
+      order: 0,
+      createdAt: new Date()
     },
     {
       id: '3',
       url: "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=600",
-      category: 'Facial',
-      caption: "Glowing skin after facial treatment"
+      category: 'Facial' as const,
+      caption: "Glowing skin after facial treatment",
+      order: 0,
+      createdAt: new Date()
     },
     {
       id: '4',
       url: "https://images.unsplash.com/photo-1604654894610-df63bc536371?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=600",
-      category: 'Nail',
-      caption: "Vibrant nail polish colors"
+      category: 'Nail' as const,
+      caption: "Vibrant nail polish colors",
+      order: 0,
+      createdAt: new Date()
     },
     {
       id: '5',
       url: "https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=600",
-      category: 'Eyelash',
-      caption: "Professional makeup with perfect lashes"
+      category: 'Eyelash' as const,
+      caption: "Professional makeup with perfect lashes",
+      order: 0,
+      createdAt: new Date()
     },
     {
       id: '6',
       url: "https://images.unsplash.com/photo-1560750588-73207b1ef5b8?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=600",
-      category: 'Facial',
-      caption: "Serene spa facial treatment"
+      category: 'Facial' as const,
+      caption: "Serene spa facial treatment",
+      order: 0,
+      createdAt: new Date()
     },
     {
       id: '7',
       url: "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=600",
-      category: 'Nail',
-      caption: "French manicure perfection"
+      category: 'Nail' as const,
+      caption: "French manicure perfection",
+      order: 0,
+      createdAt: new Date()
     },
     {
       id: '8',
       url: "https://images.unsplash.com/photo-1515377905703-c4788e51af15?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=600",
-      category: 'Facial',
-      caption: "Relaxing spa environment"
+      category: 'Facial' as const,
+      caption: "Relaxing spa environment",
+      order: 0,
+      createdAt: new Date()
     }
   ];
 
@@ -144,7 +161,7 @@ export default function Gallery() {
           
           {/* Gallery Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {displayImages.map((image: any) => (
+            {displayImages.map((image: GalleryImage) => (
               <Dialog key={image.id}>
                 <DialogTrigger asChild>
                   <div 

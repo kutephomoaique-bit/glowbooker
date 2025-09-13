@@ -11,9 +11,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ObjectUploader } from "@/components/ObjectUploader";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { Plus, Edit, Trash2, Image as ImageIcon, Upload } from "lucide-react";
+import { Plus, Edit, Trash2, Image as ImageIcon, Upload, Link as LinkIcon } from "lucide-react";
+import type { UploadResult } from "@uppy/core";
 
 export default function AdminGallery() {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -23,6 +26,8 @@ export default function AdminGallery() {
   const [imageDialog, setImageDialog] = useState(false);
   const [editingImage, setEditingImage] = useState<any>(null);
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [activeTab, setActiveTab] = useState<string>("upload");
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string>("");
   const [imageForm, setImageForm] = useState({
     url: "",
     category: "General",
@@ -164,6 +169,40 @@ export default function AdminGallery() {
     },
   });
 
+  // Upload mutations for object storage
+  const uploadImageMutation = useMutation({
+    mutationFn: async (imageData: { imageURL: string; category: string; caption: string; order: number }) => {
+      return apiRequest("PUT", "/api/admin/gallery-upload", imageData);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Image uploaded and added to gallery successfully.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/gallery"] });
+      setImageDialog(false);
+      resetForm();
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error as Error)) {
+        toast({
+          title: "Unauthorized",
+          description: "Admin session expired. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save uploaded image.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const resetForm = () => {
     setImageForm({
       url: "",
@@ -172,6 +211,8 @@ export default function AdminGallery() {
       order: "0"
     });
     setEditingImage(null);
+    setUploadedImageUrl("");
+    setActiveTab("upload");
   };
 
   const openEditDialog = (image: any) => {
@@ -182,16 +223,67 @@ export default function AdminGallery() {
       caption: image.caption || "",
       order: image.order?.toString() || "0"
     });
+    setActiveTab("manual"); // Editing always uses manual mode
     setImageDialog(true);
+  };
+
+  // Handle getting upload parameters for ObjectUploader
+  const handleGetUploadParameters = async () => {
+    try {
+      const response = await apiRequest("POST", "/api/objects/upload");
+      return {
+        method: "PUT" as const,
+        url: response.uploadURL,
+      };
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to get upload URL. Please try again.",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
+  // Handle upload completion
+  const handleUploadComplete = (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+    if (result.successful && result.successful.length > 0) {
+      const uploadedFile = result.successful[0];
+      setUploadedImageUrl(uploadedFile.uploadURL);
+      toast({
+        title: "Upload Complete",
+        description: "File uploaded successfully! Fill in the details below to add it to your gallery.",
+      });
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!imageForm.url.trim() || !imageForm.category) {
+    // For upload tab, check if we have an uploaded image
+    if (activeTab === "upload" && !uploadedImageUrl) {
+      toast({
+        title: "Missing Image",
+        description: "Please upload an image first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // For manual tab or editing, check if we have a URL
+    if (activeTab === "manual" && !imageForm.url.trim()) {
       toast({
         title: "Missing Information",
-        description: "Please provide an image URL and select a category.",
+        description: "Please provide an image URL.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!imageForm.category || !imageForm.caption.trim()) {
+      toast({
+        title: "Missing Information",
+        description: "Please provide a category and caption.",
         variant: "destructive",
       });
       return;
@@ -199,12 +291,22 @@ export default function AdminGallery() {
 
     const imageData = {
       ...imageForm,
+      url: activeTab === "upload" ? uploadedImageUrl : imageForm.url,
       order: parseInt(imageForm.order) || 0
     };
 
     if (editingImage) {
       updateImageMutation.mutate({ id: editingImage.id, ...imageData });
+    } else if (activeTab === "upload") {
+      // Use the upload endpoint for uploaded files
+      uploadImageMutation.mutate({
+        imageURL: uploadedImageUrl,
+        category: imageForm.category,
+        caption: imageForm.caption,
+        order: parseInt(imageForm.order) || 0
+      });
     } else {
+      // Use the regular endpoint for manual URLs
       createImageMutation.mutate(imageData);
     }
   };
@@ -250,96 +352,154 @@ export default function AdminGallery() {
                 Add Image
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl" data-testid="image-dialog">
+            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto" data-testid="image-dialog">
               <DialogHeader>
                 <DialogTitle data-testid="dialog-title">
                   {editingImage ? "Edit Image" : "Add New Image"}
                 </DialogTitle>
               </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-6" data-testid="image-form">
-                <div>
-                  <Label htmlFor="url" className="text-sm font-semibold mb-2 block">
-                    Image URL *
-                  </Label>
-                  <Input
-                    id="url"
-                    value={imageForm.url}
-                    onChange={(e) => setImageForm(prev => ({ ...prev, url: e.target.value }))}
-                    placeholder="https://example.com/image.jpg"
-                    data-testid="input-url"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Enter a direct URL to the image file
-                  </p>
-                </div>
+              
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+                {!editingImage && (
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="upload" data-testid="tab-upload">
+                      <Upload className="w-4 h-4 mr-2" />
+                      Upload File
+                    </TabsTrigger>
+                    <TabsTrigger value="manual" data-testid="tab-manual">
+                      <LinkIcon className="w-4 h-4 mr-2" />
+                      Manual URL
+                    </TabsTrigger>
+                  </TabsList>
+                )}
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="category" className="text-sm font-semibold mb-2 block">
-                      Category *
-                    </Label>
-                    <Select 
-                      value={imageForm.category} 
-                      onValueChange={(value) => setImageForm(prev => ({ ...prev, category: value }))}
-                      data-testid="select-category"
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categories.map((category) => (
-                          <SelectItem key={category} value={category} data-testid={`category-option-${category.toLowerCase()}`}>
-                            {category}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="order" className="text-sm font-semibold mb-2 block">
-                      Display Order
-                    </Label>
-                    <Input
-                      id="order"
-                      type="number"
-                      value={imageForm.order}
-                      onChange={(e) => setImageForm(prev => ({ ...prev, order: e.target.value }))}
-                      placeholder="0"
-                      data-testid="input-order"
-                    />
-                  </div>
-                </div>
+                <form onSubmit={handleSubmit} className="space-y-6" data-testid="image-form">
+                  <TabsContent value="upload" className="space-y-6 mt-6">
+                    <div className="space-y-4">
+                      <div>
+                        <Label className="text-sm font-semibold mb-3 block">
+                          Upload Image *
+                        </Label>
+                        <ObjectUploader
+                          maxNumberOfFiles={1}
+                          maxFileSize={10485760} // 10MB
+                          onGetUploadParameters={handleGetUploadParameters}
+                          onComplete={handleUploadComplete}
+                          buttonClassName="w-full h-32 border-2 border-dashed border-muted-foreground/25 hover:border-primary/50 transition-colors"
+                        >
+                          <div className="flex flex-col items-center space-y-2 text-muted-foreground">
+                            <Upload className="w-8 h-8" />
+                            <div className="text-center">
+                              <p className="text-sm font-medium">Upload an image</p>
+                              <p className="text-xs">PNG, JPG up to 10MB</p>
+                            </div>
+                          </div>
+                        </ObjectUploader>
+                        
+                        {uploadedImageUrl && (
+                          <div className="mt-4">
+                            <Label className="text-sm font-semibold mb-2 block">Upload Preview</Label>
+                            <div className="relative w-full h-48 bg-muted rounded-lg overflow-hidden">
+                              <img 
+                                src={uploadedImageUrl} 
+                                alt="Uploaded preview" 
+                                className="w-full h-full object-cover"
+                                data-testid="upload-preview"
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </TabsContent>
 
-                <div>
-                  <Label htmlFor="caption" className="text-sm font-semibold mb-2 block">
-                    Caption
-                  </Label>
-                  <Input
-                    id="caption"
-                    value={imageForm.caption}
-                    onChange={(e) => setImageForm(prev => ({ ...prev, caption: e.target.value }))}
-                    placeholder="Optional caption for the image"
-                    data-testid="input-caption"
-                  />
-                </div>
+                  <TabsContent value="manual" className="space-y-6 mt-6">
+                    <div>
+                      <Label htmlFor="url" className="text-sm font-semibold mb-2 block">
+                        Image URL *
+                      </Label>
+                      <Input
+                        id="url"
+                        value={imageForm.url}
+                        onChange={(e) => setImageForm(prev => ({ ...prev, url: e.target.value }))}
+                        placeholder="https://example.com/image.jpg"
+                        data-testid="input-url"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Enter a direct URL to the image file
+                      </p>
+                    </div>
+                  </TabsContent>
 
-                {imageForm.url && (
-                  <div>
-                    <Label className="text-sm font-semibold mb-2 block">Preview</Label>
-                    <div className="relative w-full h-48 bg-muted rounded-lg overflow-hidden">
-                      <img 
-                        src={imageForm.url} 
-                        alt="Preview" 
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).style.display = 'none';
-                        }}
-                        data-testid="image-preview"
+                  {/* Shared form fields for both tabs */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="category" className="text-sm font-semibold mb-2 block">
+                        Category *
+                      </Label>
+                      <Select 
+                        value={imageForm.category} 
+                        onValueChange={(value) => setImageForm(prev => ({ ...prev, category: value }))}
+                        data-testid="select-category"
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {categories.map((category) => (
+                            <SelectItem key={category} value={category} data-testid={`category-option-${category.toLowerCase()}`}>
+                              {category}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="order" className="text-sm font-semibold mb-2 block">
+                        Display Order
+                      </Label>
+                      <Input
+                        id="order"
+                        type="number"
+                        value={imageForm.order}
+                        onChange={(e) => setImageForm(prev => ({ ...prev, order: e.target.value }))}
+                        placeholder="0"
+                        data-testid="input-order"
                       />
                     </div>
                   </div>
-                )}
+
+                  <div>
+                    <Label htmlFor="caption" className="text-sm font-semibold mb-2 block">
+                      Caption *
+                    </Label>
+                    <Input
+                      id="caption"
+                      value={imageForm.caption}
+                      onChange={(e) => setImageForm(prev => ({ ...prev, caption: e.target.value }))}
+                      placeholder="Describe what's shown in this image"
+                      data-testid="input-caption"
+                    />
+                  </div>
+
+                  {/* Manual URL preview - only show for manual tab and when URL exists */}
+                  {activeTab === "manual" && imageForm.url && (
+                    <div>
+                      <Label className="text-sm font-semibold mb-2 block">Preview</Label>
+                      <div className="relative w-full h-48 bg-muted rounded-lg overflow-hidden">
+                        <img 
+                          src={imageForm.url} 
+                          alt="Manual URL preview" 
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none';
+                          }}
+                          data-testid="manual-preview"
+                        />
+                      </div>
+                    </div>
+                  )}
 
                 <div className="flex justify-end space-x-4">
                   <Button 
@@ -359,6 +519,7 @@ export default function AdminGallery() {
                   </Button>
                 </div>
               </form>
+              </Tabs>
             </DialogContent>
           </Dialog>
         </div>
