@@ -310,6 +310,7 @@ export const insertStaffServicesSchema = createInsertSchema(staffServices).omit(
 });
 
 // Types
+export type InsertUser = z.infer<typeof insertUserSchema>;
 export type UpsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type ServiceCategory = typeof serviceCategories.$inferSelect;

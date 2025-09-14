@@ -42,7 +42,7 @@ export default function Account() {
     }
   }, [isAuthenticated, isLoading, toast]);
 
-  const { data: bookings = [], isLoading: bookingsLoading, error: bookingsError } = useQuery({
+  const { data: bookings = [], isLoading: bookingsLoading, error: bookingsError } = useQuery<any[], Error>({
     queryKey: ["/api/my-bookings"],
     enabled: isAuthenticated,
     retry: false,
@@ -87,11 +87,11 @@ export default function Account() {
     return null; // Will redirect to login
   }
 
-  const upcomingBookings = bookings.filter(
+  const upcomingBookings = (bookings as any[]).filter(
     (booking: any) => new Date(booking.dateTime) > new Date() && booking.status !== 'CANCELLED'
   );
 
-  const pastBookings = bookings.filter(
+  const pastBookings = (bookings as any[]).filter(
     (booking: any) => new Date(booking.dateTime) <= new Date() || booking.status === 'DONE'
   );
 

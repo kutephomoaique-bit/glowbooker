@@ -59,8 +59,10 @@ async function upsertUser(
 ) {
   await storage.upsertUser({
     email: claims["email"],
+    password: "", // OAuth users don't need password
     firstName: claims["first_name"],
     lastName: claims["last_name"],
+    phone: "", // Default empty phone for OAuth users
     profileImageUrl: claims["profile_image_url"],
   }, claims["sub"]);
 }
@@ -77,9 +79,10 @@ export async function setupAuth(app: Express) {
     tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers,
     verified: passport.AuthenticateCallback
   ) => {
-    const user = {};
+    const user: any = {};
     updateUserSession(user, tokens);
     await upsertUser(tokens.claims());
+    // Pass the user object with session data
     verified(null, user);
   };
 
