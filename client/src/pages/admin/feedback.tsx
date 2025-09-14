@@ -688,7 +688,7 @@ export default function AdminFeedback() {
                               )}
                             </div>
                             <span className="text-xs text-muted-foreground" data-testid={`message-date-${message.id}`}>
-                              {format(new Date(message.createdAt), "MMM dd, yyyy 'at' h:mm a")}
+                              {message.createdAt ? format(new Date(message.createdAt), "MMM dd, yyyy 'at' h:mm a") : "No date"}
                             </span>
                           </div>
                           
