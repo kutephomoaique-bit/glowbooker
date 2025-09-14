@@ -95,7 +95,7 @@ export default function AdminStaff() {
   // Mutations
   const createStaffMutation = useMutation({
     mutationFn: (data: z.infer<typeof staffFormSchema>) => 
-      apiRequest('/api/admin/staff', { method: 'POST', body: data }),
+      apiRequest('POST', '/api/admin/staff', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/staff'] });
       toast({ title: "Success", description: "Staff member created successfully" });
@@ -109,7 +109,7 @@ export default function AdminStaff() {
 
   const updateStaffMutation = useMutation({
     mutationFn: ({ id, data }: { id: string, data: Partial<z.infer<typeof staffFormSchema>> }) =>
-      apiRequest(`/api/admin/staff/${id}`, { method: 'PUT', body: data }),
+      apiRequest('PUT', `/api/admin/staff/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/staff'] });
       toast({ title: "Success", description: "Staff member updated successfully" });
@@ -123,7 +123,7 @@ export default function AdminStaff() {
   });
 
   const deleteStaffMutation = useMutation({
-    mutationFn: (id: string) => apiRequest(`/api/admin/staff/${id}`, { method: 'DELETE' }),
+    mutationFn: (id: string) => apiRequest('DELETE', `/api/admin/staff/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/staff'] });
       toast({ title: "Success", description: "Staff member deleted successfully" });
@@ -135,7 +135,7 @@ export default function AdminStaff() {
 
   const createAvailabilityMutation = useMutation({
     mutationFn: (data: z.infer<typeof availabilityFormSchema>) =>
-      apiRequest('/api/admin/staff/availability', { method: 'POST', body: data }),
+      apiRequest('POST', '/api/admin/staff/availability', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/staff'] });
       toast({ title: "Success", description: "Availability added successfully" });
@@ -148,7 +148,7 @@ export default function AdminStaff() {
   });
 
   const deleteAvailabilityMutation = useMutation({
-    mutationFn: (id: string) => apiRequest(`/api/admin/staff/availability/${id}`, { method: 'DELETE' }),
+    mutationFn: (id: string) => apiRequest('DELETE', `/api/admin/staff/availability/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/staff'] });
       toast({ title: "Success", description: "Availability removed successfully" });
@@ -160,7 +160,7 @@ export default function AdminStaff() {
 
   const assignServiceMutation = useMutation({
     mutationFn: ({ staffId, serviceId }: { staffId: string, serviceId: string }) =>
-      apiRequest(`/api/admin/staff/${staffId}/services/${serviceId}`, { method: 'POST' }),
+      apiRequest('POST', `/api/admin/staff/${staffId}/services/${serviceId}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/staff'] });
       toast({ title: "Success", description: "Service assigned successfully" });
@@ -172,7 +172,7 @@ export default function AdminStaff() {
 
   const removeServiceMutation = useMutation({
     mutationFn: ({ staffId, serviceId }: { staffId: string, serviceId: string }) =>
-      apiRequest(`/api/admin/staff/${staffId}/services/${serviceId}`, { method: 'DELETE' }),
+      apiRequest('DELETE', `/api/admin/staff/${staffId}/services/${serviceId}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/staff'] });
       toast({ title: "Success", description: "Service removed successfully" });

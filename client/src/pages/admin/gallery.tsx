@@ -249,11 +249,34 @@ export default function AdminGallery() {
   const handleUploadComplete = (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
     if (result.successful && result.successful.length > 0) {
       const uploadedFile = result.successful[0];
-      setUploadedImageUrl((uploadedFile as any).uploadURL || '');
-      toast({
-        title: "Upload Complete",
-        description: "File uploaded successfully! Fill in the details below to add it to your gallery.",
-      });
+      // Extract the object URL from the upload URL by removing query parameters
+      const uploadUrl = (uploadedFile as any).uploadURL;
+      if (uploadUrl) {
+        const objectUrl = uploadUrl.split('?')[0]; // Remove query parameters to get the actual object URL
+        setUploadedImageUrl(objectUrl);
+        toast({
+          title: "Upload Complete",
+          description: "File uploaded successfully! Fill in the details below to add it to your gallery.",
+        });
+      } else {
+        // Fallback: try other possible properties
+        const alternativeUrl = (uploadedFile as any).url || (uploadedFile as any).response?.uploadURL;
+        if (alternativeUrl) {
+          const objectUrl = alternativeUrl.split('?')[0];
+          setUploadedImageUrl(objectUrl);
+          toast({
+            title: "Upload Complete",
+            description: "File uploaded successfully! Fill in the details below to add it to your gallery.",
+          });
+        } else {
+          console.error('Upload completed but no URL found in result:', uploadedFile);
+          toast({
+            title: "Upload Error",
+            description: "Upload completed but could not determine file URL. Please try again.",
+            variant: "destructive",
+          });
+        }
+      }
     }
   };
 
