@@ -1,14 +1,4 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist/public"
-      }
-    }
-  ],
   "functions": {
     "api/server.ts": {
       "runtime": "nodejs20.x",
@@ -20,17 +10,13 @@
     { "handle": "filesystem" },
     { "src": "/(.*)", "dest": "/index.html" }
   ],
-  "build": {
-    "env": {
-      "NODE_ENV": "production"
-    }
-  },
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
   "env": {
     "DATABASE_URL": "@database_url",
     "SESSION_SECRET": "@session_secret",
-    "REPLIT_DOMAINS": "@replit_domains",
-    "ISSUER_URL": "@issuer_url",
-    "PUBLIC_OBJECT_SEARCH_PATHS": "@public_object_search_paths",
-    "PRIVATE_OBJECT_DIR": "@private_object_dir"
+    "CLOUDINARY_CLOUD_NAME": "@cloudinary_cloud_name",
+    "CLOUDINARY_API_KEY": "@cloudinary_api_key",
+    "CLOUDINARY_API_SECRET": "@cloudinary_api_secret"
   }
 }
