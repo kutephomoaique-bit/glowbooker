@@ -148,6 +148,43 @@ export function setupAuth(app: Express) {
     }
   });
 
+  // Admin-only login endpoint
+  app.post("/api/admin/login", csrfProtection, (req, res, next) => {
+    passport.authenticate("local", (err: any, user: SelectUser, info: any) => {
+      if (err) {
+        return next(err);
+      }
+      if (!user) {
+        return res.status(401).json({ message: info?.message || "Invalid credentials" });
+      }
+      // Only allow admin users
+      if (user.role !== 'ADMIN') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      // Regenerate session to prevent session fixation
+      req.session.regenerate((err) => {
+        if (err) return next(err);
+        req.login(user, (err) => {
+          if (err) {
+            return next(err);
+          }
+          res.status(200).json({
+            id: user.id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            profileImageUrl: user.profileImageUrl,
+            phone: user.phone,
+            role: user.role,
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt,
+          });
+        });
+      });
+    })(req, res, next);
+  });
+
+  // Customer login endpoint (non-admin users)
   app.post("/api/login", csrfProtection, (req, res, next) => {
     passport.authenticate("local", (err: any, user: SelectUser, info: any) => {
       if (err) {
@@ -155,6 +192,10 @@ export function setupAuth(app: Express) {
       }
       if (!user) {
         return res.status(401).json({ message: info?.message || "Invalid credentials" });
+      }
+      // Only allow customer users (non-admin)
+      if (user.role === 'ADMIN') {
+        return res.status(403).json({ message: "Please use admin login" });
       }
       // Regenerate session to prevent session fixation
       req.session.regenerate((err) => {

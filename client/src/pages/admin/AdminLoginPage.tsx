@@ -20,7 +20,7 @@ type AdminLoginFormData = z.infer<typeof adminLoginSchema>;
 export default function AdminLoginPage() {
   const [, setLocation] = useLocation();
   const auth = useAuth();
-  const { user, loginMutation } = auth;
+  const { user, adminLoginMutation } = auth;
   const [showPassword, setShowPassword] = useState(false);
 
   // Redirect if already logged in and is admin
@@ -43,7 +43,7 @@ export default function AdminLoginPage() {
   });
 
   const onLogin = (data: AdminLoginFormData) => {
-    loginMutation.mutate(data, {
+    adminLoginMutation.mutate(data, {
       onSuccess: (user) => {
         if (user.role === 'ADMIN') {
           setLocation("/admin");
@@ -137,10 +137,10 @@ export default function AdminLoginPage() {
               <Button
                 type="submit"
                 className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200"
-                disabled={loginMutation.isPending}
+                disabled={adminLoginMutation.isPending}
                 data-testid="button-admin-login"
               >
-                {loginMutation.isPending ? (
+                {adminLoginMutation.isPending ? (
                   <div className="flex items-center justify-center space-x-2">
                     <Lock className="h-4 w-4 animate-spin" />
                     <span>Authenticating...</span>

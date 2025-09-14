@@ -14,6 +14,7 @@ type AuthContextType = {
   error: Error | null;
   isAuthenticated: boolean;
   loginMutation: UseMutationResult<SelectUser, Error, LoginData>;
+  adminLoginMutation: UseMutationResult<SelectUser, Error, LoginData>;
   logoutMutation: UseMutationResult<void, Error, void>;
   registerMutation: UseMutationResult<SelectUser, Error, InsertUser>;
 };
@@ -67,6 +68,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     onError: (error: Error) => {
       toast({
         title: "Login failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const adminLoginMutation = useMutation({
+    mutationFn: async (credentials: LoginData) => {
+      const res = await apiRequest("POST", "/api/admin/login", credentials);
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || 'Admin login failed');
+      }
+      return await res.json();
+    },
+    onSuccess: (user: SelectUser) => {
+      queryClient.setQueryData(["/api/user"], user);
+      toast({
+        title: "Admin Access Granted",
+        description: `Welcome back, ${user.firstName} ${user.lastName}`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Admin login failed",
         description: error.message,
         variant: "destructive",
       });
@@ -129,6 +155,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         error,
         isAuthenticated: !!user,
         loginMutation,
+        adminLoginMutation,
         logoutMutation,
         registerMutation,
       }}
