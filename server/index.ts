@@ -21,7 +21,8 @@ app.use((req, res, next) => {
     const duration = Date.now() - start;
     if (path.startsWith("/api")) {
       let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
+      // Only log response data in development to prevent sensitive data leaks
+      if (capturedJsonResponse && process.env.NODE_ENV !== 'production') {
         logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
       }
 
@@ -54,14 +55,6 @@ app.use((req, res, next) => {
 
   const server = await registerRoutes(app);
 
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
-
-    res.status(status).json({ message });
-    throw err;
-  });
-
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes
@@ -71,7 +64,7 @@ app.use((req, res, next) => {
     // Custom static serving to avoid catch-all route interfering with API routes
     const path = await import("path");
     const fs = await import("fs");
-    const distPath = path.resolve(import.meta.dirname, "public");
+    const distPath = path.resolve(import.meta.dirname, "..", "dist/public");
 
     if (!fs.existsSync(distPath)) {
       throw new Error(
@@ -98,6 +91,20 @@ app.use((req, res, next) => {
   // Other ports are firewalled. Default to 5000 if not specified.
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
+  // Error handler - must be at the very end of middleware stack
+  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+    const status = err.status || err.statusCode || 500;
+    const message = err.message || "Internal Server Error";
+
+    // Log error in development
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('Server error:', err);
+    }
+
+    res.status(status).json({ message });
+    // Don't throw error after sending response - this prevents process crashes
+  });
+
   const port = parseInt(process.env.PORT || '5000', 10);
   server.listen({
     port,
