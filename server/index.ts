@@ -37,6 +37,21 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Production admin setup - ensure admin account exists on startup
+  if (process.env.NODE_ENV === 'production' || process.env.REPLIT_DEPLOYMENT === '1') {
+    try {
+      console.log('🔧 Setting up production admin account...');
+      const { exec } = await import('child_process');
+      const { promisify } = await import('util');
+      const execAsync = promisify(exec);
+      
+      await execAsync('node scripts/production-admin-setup.js');
+      console.log('✅ Production admin setup completed');
+    } catch (error) {
+      console.warn('⚠️  Production admin setup failed:', error instanceof Error ? error.message : String(error));
+    }
+  }
+
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
