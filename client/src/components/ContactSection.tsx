@@ -206,29 +206,18 @@ export default function ContactSection({ contentSettings }: ContactSectionProps)
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-6" data-testid="contact-form">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="firstName" className="text-sm font-semibold text-foreground mb-2 block">
-                        First Name
-                      </Label>
-                      <Input
-                        id="firstName"
-                        type="text"
-                        placeholder="Your first name"
-                        data-testid="input-first-name"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="lastName" className="text-sm font-semibold text-foreground mb-2 block">
-                        Last Name
-                      </Label>
-                      <Input
-                        id="lastName"
-                        type="text"
-                        placeholder="Your last name"
-                        data-testid="input-last-name"
-                      />
-                    </div>
+                  <div>
+                    <Label htmlFor="contactName" className="text-sm font-semibold text-foreground mb-2 block">
+                      Full Name *
+                    </Label>
+                    <Input
+                      id="contactName"
+                      type="text"
+                      placeholder="Your full name"
+                      value={formData.name}
+                      onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                      data-testid="input-contact-name"
+                    />
                   </div>
                   
                   <div>
