@@ -93,8 +93,6 @@ export function ObjectUploader({
         proudlyDisplayPoweredByUppy={false}
         theme="light"
         note="Only image files are allowed. Max file size: 10MB"
-        width={650}
-        height={470}
       />
     </div>
   );
