@@ -290,7 +290,11 @@ export default function AdminBookings() {
                                 {booking.service.name}
                               </h3>
                               <p className="text-sm text-muted-foreground" data-testid={`booking-category-${booking.id}`}>
-                                {booking.service.category.name}
+                                {[
+                                  booking.service.isNail && "Nail",
+                                  booking.service.isEyelash && "Eyelash", 
+                                  booking.service.isFacial && "Facial"
+                                ].filter(Boolean).join(", ") || "No categories"}
                               </p>
                             </div>
                             
