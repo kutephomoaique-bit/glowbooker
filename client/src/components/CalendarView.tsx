@@ -256,7 +256,11 @@ export default function CalendarView({ bookings, onUpdateBookingStatus, onEditBo
                     {selectedBooking.service.name}
                   </h3>
                   <p className="text-sm text-muted-foreground" data-testid="dialog-service-category">
-                    {selectedBooking.service.category.name}
+                    {[
+                      selectedBooking.service.isNail && "Nail",
+                      selectedBooking.service.isEyelash && "Eyelash", 
+                      selectedBooking.service.isFacial && "Facial"
+                    ].filter(Boolean).join(", ") || "General"}
                   </p>
                 </div>
                 

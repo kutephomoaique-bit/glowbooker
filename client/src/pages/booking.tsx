@@ -196,7 +196,11 @@ export default function Booking() {
                                   {service.name}
                                 </p>
                                 <p className="text-sm text-muted-foreground" data-testid={`service-category-${service.id}`}>
-                                  {service.category.name} • {service.durationMins} mins
+                                  {[
+                                    service.isNail && "Nail",
+                                    service.isEyelash && "Eyelash", 
+                                    service.isFacial && "Facial"
+                                  ].filter(Boolean).join(", ") || "General"} • {service.durationMins} mins
                                 </p>
                               </div>
                               <div className="text-right">

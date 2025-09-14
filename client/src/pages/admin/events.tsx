@@ -577,7 +577,11 @@ export default function AdminEvents() {
                         <SelectContent>
                           {services.map((service: any) => (
                             <SelectItem key={service.id} value={service.id} data-testid={`service-option-${service.id}`}>
-                              {service.name} ({service.category.name})
+                              {service.name} ({[
+                                service.isNail && "Nail",
+                                service.isEyelash && "Eyelash", 
+                                service.isFacial && "Facial"
+                              ].filter(Boolean).join(", ") || "General"})
                             </SelectItem>
                           ))}
                         </SelectContent>
