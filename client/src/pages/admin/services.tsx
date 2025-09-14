@@ -435,7 +435,11 @@ export default function AdminServices() {
                       {service.name}
                     </CardTitle>
                     <p className="text-sm text-muted-foreground" data-testid={`service-category-${service.id}`}>
-                      {service.category.name}
+                      {[
+                        service.isNail && "Nail",
+                        service.isEyelash && "Eyelash", 
+                        service.isFacial && "Facial"
+                      ].filter(Boolean).join(", ") || "No categories"}
                     </p>
                   </div>
                   <div className="flex items-center space-x-2">
