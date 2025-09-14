@@ -31,7 +31,7 @@ export default function GallerySection({ images = [] }: GallerySectionProps) {
     },
     {
       id: '2', 
-      url: "https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=600",
+      url: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=600",
       category: 'Eyelash' as const,
       caption: "Beautiful eyelash extensions"
     },
