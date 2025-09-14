@@ -68,7 +68,30 @@ app.use((req, res, next) => {
   if (app.get("env") === "development") {
     await setupVite(app, server);
   } else {
-    serveStatic(app);
+    // Custom static serving to avoid catch-all route interfering with API routes
+    const path = await import("path");
+    const fs = await import("fs");
+    const distPath = path.resolve(import.meta.dirname, "public");
+
+    if (!fs.existsSync(distPath)) {
+      throw new Error(
+        `Could not find the build directory: ${distPath}, make sure to build the client first`,
+      );
+    }
+
+    // Serve static files
+    app.use(express.static(distPath));
+
+    // Only serve index.html for non-API routes
+    app.use((req, res, next) => {
+      // If this is an API route that wasn't matched, let it 404 properly
+      if (req.path.startsWith('/api/')) {
+        return res.status(404).json({ message: 'API endpoint not found' });
+      }
+      
+      // For all other routes, serve index.html for client-side routing
+      res.sendFile(path.resolve(distPath, "index.html"));
+    });
   }
 
   // ALWAYS serve the app on the port specified in the environment variable PORT
