@@ -21,6 +21,7 @@ import {
   MessageSquare
 } from "lucide-react";
 import { format } from "date-fns";
+import type { Feedback, ContactMessage } from "@shared/schema";
 
 export default function AdminFeedback() {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -45,21 +46,27 @@ export default function AdminFeedback() {
     }
   }, [isAuthenticated, isLoading, user, toast]);
 
-  const { data: allFeedback = [], error: feedbackError } = useQuery({
+  const { data: allFeedback = [], error: feedbackError } = useQuery<(Feedback & { user?: any })[]>({
     queryKey: ["/api/admin/feedback"],
     enabled: isAuthenticated && user?.role === 'ADMIN',
     retry: false,
   });
 
-  const { data: pendingFeedback = [], error: pendingError } = useQuery({
+  const { data: pendingFeedback = [], error: pendingError } = useQuery<(Feedback & { user?: any })[]>({
     queryKey: ["/api/admin/feedback/pending"],
+    enabled: isAuthenticated && user?.role === 'ADMIN',
+    retry: false,
+  });
+
+  const { data: contactMessages = [], error: contactError } = useQuery<ContactMessage[]>({
+    queryKey: ["/api/admin/contact-messages"],
     enabled: isAuthenticated && user?.role === 'ADMIN',
     retry: false,
   });
 
   // Handle unauthorized errors
   useEffect(() => {
-    const errors = [feedbackError, pendingError].filter(Boolean);
+    const errors = [feedbackError, pendingError, contactError].filter(Boolean);
     for (const error of errors) {
       if (isUnauthorizedError(error as Error)) {
         toast({
@@ -284,7 +291,7 @@ export default function AdminFeedback() {
 
         {/* Tabs */}
         <Tabs defaultValue="pending" className="w-full" data-testid="feedback-tabs">
-          <TabsList className="grid w-full grid-cols-4" data-testid="tabs-list">
+          <TabsList className="grid w-full grid-cols-5" data-testid="tabs-list">
             <TabsTrigger value="pending" data-testid="tab-pending">
               Pending ({pendingFeedback.length})
             </TabsTrigger>
@@ -295,6 +302,9 @@ export default function AdminFeedback() {
               Rejected ({rejectedFeedback.length})
             </TabsTrigger>
             <TabsTrigger value="all" data-testid="tab-all">All</TabsTrigger>
+            <TabsTrigger value="messages" data-testid="tab-messages">
+              Messages ({contactMessages.length})
+            </TabsTrigger>
           </TabsList>
 
           {/* Pending Tab */}
@@ -647,6 +657,75 @@ export default function AdminFeedback() {
                     </div>
                   )}
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Contact Messages Tab */}
+          <TabsContent value="messages" data-testid="tab-content-messages">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MessageSquare className="w-5 h-5" />
+                  Contact Messages
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {contactMessages.length > 0 ? (
+                  <div className="space-y-4">
+                    {contactMessages.map((message) => (
+                      <Card key={message.id} className="p-4" data-testid={`message-card-${message.id}`}>
+                        <div className="space-y-3">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <h4 className="font-semibold text-foreground" data-testid={`message-name-${message.id}`}>
+                                {message.name}
+                              </h4>
+                              {message.phone && (
+                                <p className="text-sm text-muted-foreground" data-testid={`message-phone-${message.id}`}>
+                                  📞 {message.phone}
+                                </p>
+                              )}
+                            </div>
+                            <span className="text-xs text-muted-foreground" data-testid={`message-date-${message.id}`}>
+                              {format(new Date(message.createdAt), "MMM dd, yyyy 'at' h:mm a")}
+                            </span>
+                          </div>
+                          
+                          <div className="bg-muted/30 p-3 rounded-lg">
+                            <p className="text-foreground whitespace-pre-wrap" data-testid={`message-content-${message.id}`}>
+                              {message.message}
+                            </p>
+                          </div>
+                          
+                          <div className="flex justify-end">
+                            <Button
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => {
+                                // Copy phone number and email for easy contact
+                                const contactInfo = `${message.name}${message.phone ? ` - ${message.phone}` : ''}`;
+                                navigator.clipboard.writeText(contactInfo);
+                                toast({
+                                  title: "Contact Info Copied",
+                                  description: "Customer contact information copied to clipboard",
+                                });
+                              }}
+                              data-testid={`button-copy-contact-${message.id}`}
+                            >
+                              Copy Contact
+                            </Button>
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground" data-testid="no-messages">
+                    <MessageSquare className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                    <p>No contact messages yet</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
