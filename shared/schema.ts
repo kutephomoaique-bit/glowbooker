@@ -264,6 +264,13 @@ export const insertEventPromoSchema = createInsertSchema(eventPromos).omit({
 export const insertBookingSchema = createInsertSchema(bookings).omit({
   id: true,
   createdAt: true,
+}).extend({
+  dateTime: z.string().or(z.date()).transform((val) => {
+    if (typeof val === 'string') {
+      return new Date(val);
+    }
+    return val;
+  }),
 });
 
 export const insertGalleryImageSchema = createInsertSchema(galleryImages).omit({
