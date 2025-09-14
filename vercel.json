@@ -2,18 +2,11 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "functions": {
-    "api/**/*.ts": {
-      "runtime": "nodejs20.x",
-      "maxDuration": 30
-    },
-    "server/**/*.ts": {
-      "runtime": "nodejs20.x",
-      "maxDuration": 30
-    }
+    "api/**/*.ts": { "runtime": "nodejs18.x" },
+    "api/**/*.js": { "runtime": "nodejs18.x" }
   },
   "routes": [
     { "src": "/api/(.*)", "dest": "/api/$1" },
-    { "src": "/server/(.*)", "dest": "/server/$1" },
     { "handle": "filesystem" },
     { "src": "/(.*)", "dest": "/index.html" }
   ]
