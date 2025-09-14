@@ -83,7 +83,7 @@ export function setupAuth(app: Express) {
       async (email, password, done) => {
         try {
           const user = await storage.getUserByEmail(email);
-          if (!user || !(await comparePasswords(password, user.password))) {
+          if (!user || !user.password || !(await comparePasswords(password, user.password))) {
             return done(null, false, { message: 'Invalid email or password' });
           } else {
             return done(null, user);
@@ -121,7 +121,7 @@ export function setupAuth(app: Express) {
 
       const user = await storage.createUser({
         ...userData,
-        password: await hashPassword(userData.password),
+        password: userData.password ? await hashPassword(userData.password) : undefined,
       });
 
       // Regenerate session to prevent session fixation

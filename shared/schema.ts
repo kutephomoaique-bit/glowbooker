@@ -41,11 +41,11 @@ export const dayOfWeekEnum = pgEnum('day_of_week', ['MONDAY', 'TUESDAY', 'WEDNES
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   email: varchar("email").unique().notNull(),
-  password: varchar("password").notNull(),
-  firstName: varchar("first_name").notNull(),
-  lastName: varchar("last_name").notNull(),
+  password: varchar("password"), // Made nullable for production compatibility
+  firstName: varchar("first_name"), // Made nullable for production compatibility  
+  lastName: varchar("last_name"), // Made nullable for production compatibility
   profileImageUrl: varchar("profile_image_url"),
-  phone: varchar("phone").notNull(),
+  phone: varchar("phone"), // Made nullable for production compatibility
   role: userRoleEnum("role").default('CUSTOMER').notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
