@@ -33,7 +33,8 @@ export default function ContactSection({ contentSettings }: ContactSectionProps)
 
   const createMessageMutation = useMutation({
     mutationFn: async (messageData: any) => {
-      return apiRequest("POST", "/api/contact", messageData);
+      const response = await apiRequest("POST", "/api/contact", messageData);
+      return response.json();
     },
     onSuccess: () => {
       toast({
