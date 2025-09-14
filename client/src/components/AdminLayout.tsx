@@ -22,7 +22,7 @@ interface AdminLayoutProps {
 }
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
-  const { user } = useAuth();
+  const { user, logoutMutation } = useAuth();
   const [location] = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -131,13 +131,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             <Button 
               variant="ghost" 
               className="w-full justify-start text-muted-foreground"
-              asChild
+              onClick={() => logoutMutation.mutate()}
               data-testid="logout-button"
             >
-              <a href="/api/logout">
-                <LogOut className="w-4 h-4 mr-3" />
-                Logout
-              </a>
+              <LogOut className="w-4 h-4 mr-3" />
+              Logout
             </Button>
           </div>
         </div>

@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export default function Navigation() {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, logoutMutation } = useAuth();
   const [location] = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -103,10 +103,14 @@ export default function Navigation() {
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuItem asChild>
-                    <a href="/api/logout" className="flex items-center" data-testid="link-logout">
+                    <button 
+                      onClick={() => logoutMutation.mutate()} 
+                      className="flex items-center w-full" 
+                      data-testid="button-logout"
+                    >
                       <LogOut className="w-4 h-4 mr-2" />
                       Logout
-                    </a>
+                    </button>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -171,13 +175,11 @@ export default function Navigation() {
                       <Button 
                         variant="outline" 
                         className="w-full justify-start" 
-                        asChild
+                        onClick={() => logoutMutation.mutate()}
                         data-testid="mobile-button-logout"
                       >
-                        <a href="/api/logout">
-                          <LogOut className="w-4 h-4 mr-2" />
-                          Logout
-                        </a>
+                        <LogOut className="w-4 h-4 mr-2" />
+                        Logout
                       </Button>
                     </>
                   ) : (
