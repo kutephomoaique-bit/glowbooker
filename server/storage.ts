@@ -205,7 +205,30 @@ export class DatabaseStorage implements IStorage {
   }
   
   async createService(service: InsertService): Promise<Service> {
-    const [created] = await db.insert(services).values(service).returning();
+    // Ensure slug is unique by checking existing services
+    let uniqueSlug = service.slug;
+    let counter = 1;
+    
+    while (true) {
+      const existing = await db
+        .select({ id: services.id })
+        .from(services)
+        .where(eq(services.slug, uniqueSlug))
+        .limit(1);
+      
+      if (existing.length === 0) {
+        break; // Slug is unique, we can use it
+      }
+      
+      // Slug exists, append counter and try again
+      uniqueSlug = `${service.slug}-${counter}`;
+      counter++;
+    }
+    
+    const [created] = await db.insert(services).values({
+      ...service,
+      slug: uniqueSlug
+    }).returning();
     return created;
   }
   
