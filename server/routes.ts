@@ -232,7 +232,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Protected routes - Customer bookings
   app.get('/api/my-bookings', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const bookings = await storage.getBookingsByUser(userId);
       res.json(bookings);
     } catch (error) {
@@ -244,7 +244,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin-only middleware
   const isAdmin = async (req: any, res: any, next: any) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const user = await storage.getUser(userId);
       if (!user || user.role !== 'ADMIN') {
         return res.status(403).json({ message: "Admin access required" });
@@ -404,7 +404,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(400).json({ error: "imageURL, category, and caption are required" });
     }
 
-    const userId = req.user.claims.sub;
+    const userId = req.user.id;
 
     try {
       const objectStorageService = new ObjectStorageService();
