@@ -54,9 +54,8 @@ export interface IStorage {
   deleteServiceCategory(id: string): Promise<void>;
   
   // Service operations
-  getServices(): Promise<(Service & { category: ServiceCategory })[]>;
-  getServicesByCategory(categoryId: string): Promise<Service[]>;
-  getService(id: string): Promise<(Service & { category: ServiceCategory }) | undefined>;
+  getServices(): Promise<Service[]>;
+  getService(id: string): Promise<Service | undefined>;
   createService(service: InsertService): Promise<Service>;
   updateService(id: string, service: Partial<InsertService>): Promise<Service>;
   deleteService(id: string): Promise<void>;
@@ -69,9 +68,9 @@ export interface IStorage {
   deleteEventPromo(id: string): Promise<void>;
   
   // Booking operations
-  getBookings(): Promise<(Booking & { service: Service & { category: ServiceCategory }, user?: User, staff?: Staff })[]>;
-  getBookingsByUser(userId: string): Promise<(Booking & { service: Service & { category: ServiceCategory }, staff?: Staff })[]>;
-  getBooking(id: string): Promise<(Booking & { service: Service & { category: ServiceCategory }, user?: User, staff?: Staff }) | undefined>;
+  getBookings(): Promise<(Booking & { service: Service, user?: User, staff?: Staff })[]>;
+  getBookingsByUser(userId: string): Promise<(Booking & { service: Service, staff?: Staff })[]>;
+  getBooking(id: string): Promise<(Booking & { service: Service, user?: User, staff?: Staff }) | undefined>;
   createBooking(booking: InsertBooking): Promise<Booking>;
   updateBooking(id: string, booking: Partial<InsertBooking>): Promise<Booking>;
   deleteBooking(id: string): Promise<void>;
@@ -181,27 +180,18 @@ export class DatabaseStorage implements IStorage {
   }
   
   // Service operations
-  async getServices(): Promise<(Service & { category: ServiceCategory })[]> {
-    return await db
-      .select()
-      .from(services)
-      .leftJoin(serviceCategories, eq(services.categoryId, serviceCategories.id))
-      .then(rows => rows.map(row => ({ ...row.services, category: row.service_categories! })));
+  async getServices(): Promise<Service[]> {
+    return await db.select().from(services);
   }
   
-  async getServicesByCategory(categoryId: string): Promise<Service[]> {
-    return await db.select().from(services).where(eq(services.categoryId, categoryId));
-  }
   
-  async getService(id: string): Promise<(Service & { category: ServiceCategory }) | undefined> {
+  async getService(id: string): Promise<Service | undefined> {
     const [result] = await db
       .select()
       .from(services)
-      .leftJoin(serviceCategories, eq(services.categoryId, serviceCategories.id))
       .where(eq(services.id, id));
     
-    if (!result) return undefined;
-    return { ...result.services, category: result.service_categories! };
+    return result;
   }
   
   async createService(service: InsertService): Promise<Service> {
@@ -283,47 +273,44 @@ export class DatabaseStorage implements IStorage {
   }
   
   // Booking operations
-  async getBookings(): Promise<(Booking & { service: Service & { category: ServiceCategory }, user?: User, staff?: Staff })[]> {
+  async getBookings(): Promise<(Booking & { service: Service, user?: User, staff?: Staff })[]> {
     const results = await db
       .select()
       .from(bookings)
       .leftJoin(services, eq(bookings.serviceId, services.id))
-      .leftJoin(serviceCategories, eq(services.categoryId, serviceCategories.id))
       .leftJoin(users, eq(bookings.userId, users.id))
       .leftJoin(staff, eq(bookings.staffId, staff.id))
       .orderBy(desc(bookings.dateTime));
     
     return results.map(row => ({
       ...row.bookings,
-      service: { ...row.services!, category: row.service_categories! },
+      service: row.services!,
       user: row.users || undefined,
       staff: row.staff || undefined,
     }));
   }
   
-  async getBookingsByUser(userId: string): Promise<(Booking & { service: Service & { category: ServiceCategory }, staff?: Staff })[]> {
+  async getBookingsByUser(userId: string): Promise<(Booking & { service: Service, staff?: Staff })[]> {
     const results = await db
       .select()
       .from(bookings)
       .leftJoin(services, eq(bookings.serviceId, services.id))
-      .leftJoin(serviceCategories, eq(services.categoryId, serviceCategories.id))
       .leftJoin(staff, eq(bookings.staffId, staff.id))
       .where(eq(bookings.userId, userId))
       .orderBy(desc(bookings.dateTime));
     
     return results.map(row => ({
       ...row.bookings,
-      service: { ...row.services!, category: row.service_categories! },
+      service: row.services!,
       staff: row.staff || undefined,
     }));
   }
   
-  async getBooking(id: string): Promise<(Booking & { service: Service & { category: ServiceCategory }, user?: User, staff?: Staff }) | undefined> {
+  async getBooking(id: string): Promise<(Booking & { service: Service, user?: User, staff?: Staff }) | undefined> {
     const [result] = await db
       .select()
       .from(bookings)
       .leftJoin(services, eq(bookings.serviceId, services.id))
-      .leftJoin(serviceCategories, eq(services.categoryId, serviceCategories.id))
       .leftJoin(users, eq(bookings.userId, users.id))
       .leftJoin(staff, eq(bookings.staffId, staff.id))
       .where(eq(bookings.id, id));
@@ -332,7 +319,7 @@ export class DatabaseStorage implements IStorage {
     
     return {
       ...result.bookings,
-      service: { ...result.services!, category: result.service_categories! },
+      service: result.services!,
       user: result.users || undefined,
       staff: result.staff || undefined,
     };

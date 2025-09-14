@@ -24,12 +24,14 @@ export default function AdminServices() {
   const [serviceDialog, setServiceDialog] = useState(false);
   const [editingService, setEditingService] = useState<any>(null);
   const [serviceForm, setServiceForm] = useState({
-    categoryId: "",
     name: "",
     slug: "",
     description: "",
     basePrice: "",
     durationMins: "",
+    isNail: false,
+    isEyelash: false,
+    isFacial: false,
     isActive: true
   });
 
@@ -55,15 +57,9 @@ export default function AdminServices() {
     retry: false,
   });
 
-  const { data: categories = [], error: categoriesError } = useQuery<any[]>({
-    queryKey: ["/api/service-categories"],
-    enabled: isAuthenticated && user?.role === 'ADMIN',
-    retry: false,
-  });
-
   // Handle unauthorized errors
   useEffect(() => {
-    const errors = [servicesError, categoriesError].filter(Boolean);
+    const errors = [servicesError].filter(Boolean);
     for (const error of errors) {
       if (isUnauthorizedError(error as Error)) {
         toast({
@@ -77,7 +73,7 @@ export default function AdminServices() {
         return;
       }
     }
-  }, [servicesError, categoriesError, toast]);
+  }, [servicesError, toast]);
 
   const createServiceMutation = useMutation({
     mutationFn: async (serviceData: any) => {
@@ -188,12 +184,14 @@ export default function AdminServices() {
 
   const resetForm = () => {
     setServiceForm({
-      categoryId: "",
       name: "",
       slug: "",
       description: "",
       basePrice: "",
       durationMins: "",
+      isNail: false,
+      isEyelash: false,
+      isFacial: false,
       isActive: true
     });
     setEditingService(null);
@@ -202,12 +200,14 @@ export default function AdminServices() {
   const openEditDialog = (service: any) => {
     setEditingService(service);
     setServiceForm({
-      categoryId: service.categoryId,
       name: service.name,
       slug: service.slug,
       description: service.description || "",
       basePrice: service.basePrice,
       durationMins: service.durationMins.toString(),
+      isNail: service.isNail || false,
+      isEyelash: service.isEyelash || false,
+      isFacial: service.isFacial || false,
       isActive: service.isActive
     });
     setServiceDialog(true);
@@ -216,10 +216,10 @@ export default function AdminServices() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!serviceForm.categoryId || !serviceForm.name || !serviceForm.basePrice || !serviceForm.durationMins) {
+    if (!serviceForm.name || !serviceForm.basePrice || !serviceForm.durationMins || (!serviceForm.isNail && !serviceForm.isEyelash && !serviceForm.isFacial)) {
       toast({
         title: "Missing Information",
-        description: "Please fill in all required fields.",
+        description: "Please fill in all required fields and select at least one category.",
         variant: "destructive",
       });
       return;
@@ -283,25 +283,50 @@ export default function AdminServices() {
               <form onSubmit={handleSubmit} className="space-y-6" data-testid="service-form">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="categoryId" className="text-sm font-semibold mb-2 block">
-                      Category *
+                    <Label className="text-sm font-semibold mb-2 block">
+                      Categories *
                     </Label>
-                    <Select 
-                      value={serviceForm.categoryId} 
-                      onValueChange={(value) => setServiceForm(prev => ({ ...prev, categoryId: value }))}
-                      data-testid="select-category"
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categories.map((category: any) => (
-                          <SelectItem key={category.id} value={category.id} data-testid={`category-option-${category.id}`}>
-                            {category.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <div className="space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id="isNail"
+                          checked={serviceForm.isNail}
+                          onChange={(e) => setServiceForm(prev => ({ ...prev, isNail: e.target.checked }))}
+                          className="rounded border-border"
+                          data-testid="checkbox-nail"
+                        />
+                        <Label htmlFor="isNail" className="text-sm">
+                          Nail
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id="isEyelash"
+                          checked={serviceForm.isEyelash}
+                          onChange={(e) => setServiceForm(prev => ({ ...prev, isEyelash: e.target.checked }))}
+                          className="rounded border-border"
+                          data-testid="checkbox-eyelash"
+                        />
+                        <Label htmlFor="isEyelash" className="text-sm">
+                          Eyelash
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id="isFacial"
+                          checked={serviceForm.isFacial}
+                          onChange={(e) => setServiceForm(prev => ({ ...prev, isFacial: e.target.checked }))}
+                          className="rounded border-border"
+                          data-testid="checkbox-facial"
+                        />
+                        <Label htmlFor="isFacial" className="text-sm">
+                          Facial
+                        </Label>
+                      </div>
+                    </div>
                   </div>
                   
                   <div>

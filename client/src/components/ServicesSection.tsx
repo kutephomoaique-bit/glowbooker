@@ -10,10 +10,9 @@ interface Service {
   basePrice: string;
   effectivePrice?: number;
   hasDiscount?: boolean;
-  category: {
-    name: string;
-    slug: string;
-  };
+  isNail: boolean;
+  isEyelash: boolean;
+  isFacial: boolean;
 }
 
 interface ServicesSectionProps {
@@ -21,13 +20,21 @@ interface ServicesSectionProps {
 }
 
 export default function ServicesSection({ services = [] }: ServicesSectionProps) {
-  // Group services by category
+  // Group services by category based on boolean flags
   const servicesByCategory = services.reduce((acc, service) => {
-    const categoryName = service.category.name;
-    if (!acc[categoryName]) {
-      acc[categoryName] = [];
+    // Add service to multiple categories if it belongs to multiple
+    if (service.isNail) {
+      if (!acc["Nail"]) acc["Nail"] = [];
+      acc["Nail"].push(service);
     }
-    acc[categoryName].push(service);
+    if (service.isEyelash) {
+      if (!acc["Eyelash"]) acc["Eyelash"] = [];
+      acc["Eyelash"].push(service);
+    }
+    if (service.isFacial) {
+      if (!acc["Facial"]) acc["Facial"] = [];
+      acc["Facial"].push(service);
+    }
     return acc;
   }, {} as Record<string, Service[]>);
 

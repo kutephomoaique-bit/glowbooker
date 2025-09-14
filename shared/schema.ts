@@ -60,12 +60,14 @@ export const serviceCategories = pgTable("service_categories", {
 
 export const services = pgTable("services", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  categoryId: varchar("category_id").references(() => serviceCategories.id).notNull(),
   name: varchar("name").notNull(),
   slug: varchar("slug").notNull().unique(),
   description: text("description"),
   basePrice: decimal("base_price", { precision: 10, scale: 2 }).notNull(),
   durationMins: integer("duration_mins").notNull(),
+  isNail: boolean("is_nail").default(false),
+  isEyelash: boolean("is_eyelash").default(false),
+  isFacial: boolean("is_facial").default(false),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -177,15 +179,9 @@ export const contentSettings = pgTable("content_settings", {
 });
 
 // Relations
-export const serviceCategoriesRelations = relations(serviceCategories, ({ many }) => ({
-  services: many(services),
-}));
+// Service categories no longer have direct relations to services since services use boolean flags
 
-export const servicesRelations = relations(services, ({ one, many }) => ({
-  category: one(serviceCategories, {
-    fields: [services.categoryId],
-    references: [serviceCategories.id],
-  }),
+export const servicesRelations = relations(services, ({ many }) => ({
   bookings: many(bookings),
   staffServices: many(staffServices),
 }));
