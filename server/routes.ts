@@ -499,6 +499,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin Contact Messages routes
+  app.get('/api/admin/contact-messages', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const contactMessages = await storage.getContactMessages();
+      res.json(contactMessages);
+    } catch (error) {
+      console.error("Error fetching contact messages:", error);
+      res.status(500).json({ message: "Failed to fetch contact messages" });
+    }
+  });
+
   app.put('/api/admin/feedback/:id', isAuthenticated, isAdmin, async (req, res) => {
     try {
       const feedbackData = insertFeedbackSchema.partial().parse(req.body);
