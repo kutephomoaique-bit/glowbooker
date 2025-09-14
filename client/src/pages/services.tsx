@@ -26,15 +26,34 @@ export default function Services() {
     queryKey: ["/api/content-settings"],
   });
 
-  // Group services by category
+  // Group services by category using boolean flags
   const servicesByCategory = services.reduce((acc: any, service: any) => {
-    const categoryName = service.category.name;
-    if (!acc[categoryName]) {
-      acc[categoryName] = [];
-    }
-    acc[categoryName].push(service);
+    const categoryNames = [];
+    if (service.isNail) categoryNames.push('Nail');
+    if (service.isEyelash) categoryNames.push('Eyelash');
+    if (service.isFacial) categoryNames.push('Facial');
+    
+    // If no categories set, put in "General"
+    if (categoryNames.length === 0) categoryNames.push('General');
+    
+    categoryNames.forEach(categoryName => {
+      if (!acc[categoryName]) {
+        acc[categoryName] = [];
+      }
+      acc[categoryName].push(service);
+    });
+    
     return acc;
   }, {});
+
+  // Helper function to get category names from boolean flags
+  const getServiceCategories = (service: any) => {
+    const categories = [];
+    if (service.isNail) categories.push('Nail');
+    if (service.isEyelash) categories.push('Eyelash');
+    if (service.isFacial) categories.push('Facial');
+    return categories.length > 0 ? categories : ['General'];
+  };
 
   const getCategoryIcon = (categoryName: string) => {
     switch (categoryName.toLowerCase()) {
@@ -116,7 +135,7 @@ export default function Services() {
                     <CardHeader>
                       <div className="flex items-center justify-between mb-2">
                         <div className="w-12 h-12 luxury-gradient rounded-2xl flex items-center justify-center text-white">
-                          {getCategoryIcon(service.category.name)}
+                          {getCategoryIcon(getServiceCategories(service)[0])}
                         </div>
                         {service.hasDiscount && (
                           <Badge variant="secondary" data-testid={`discount-badge-${service.id}`}>
@@ -128,12 +147,12 @@ export default function Services() {
                         {service.name}
                       </CardTitle>
                       <p className="text-sm text-muted-foreground" data-testid={`service-category-${service.id}`}>
-                        {service.category.name} Service
+                        {getServiceCategories(service).join(", ")} Service
                       </p>
                     </CardHeader>
                     <CardContent>
                       <p className="text-muted-foreground mb-4" data-testid={`service-description-${service.id}`}>
-                        {service.description || `Professional ${service.category.name.toLowerCase()} service with premium products and expert care.`}
+                        {service.description || `Professional ${getServiceCategories(service)[0].toLowerCase()} service with premium products and expert care.`}
                       </p>
                       
                       <div className="flex items-center justify-between mb-4">
@@ -212,7 +231,7 @@ export default function Services() {
                       </CardHeader>
                       <CardContent>
                         <p className="text-muted-foreground mb-4" data-testid={`category-service-description-${service.id}`}>
-                          {service.description || `Professional ${service.category.name.toLowerCase()} service with premium products and expert care.`}
+                          {service.description || `Professional ${getServiceCategories(service)[0].toLowerCase()} service with premium products and expert care.`}
                         </p>
                         
                         <div className="flex items-center justify-between mb-4">
