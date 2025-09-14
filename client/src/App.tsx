@@ -23,6 +23,7 @@ import AdminGallery from "./pages/admin/gallery";
 import AdminFeedback from "./pages/admin/feedback";
 import AdminEvents from "./pages/admin/events";
 import AdminSettings from "./pages/admin/settings";
+import AdminLoginPage from "./pages/admin/AdminLoginPage";
 
 function Router() {
   const { user } = useAuth();
@@ -31,6 +32,7 @@ function Router() {
     <Switch>
       {/* Public routes available to everyone */}
       <Route path="/auth" component={AuthPage} />
+      <Route path="/admin/login" component={AdminLoginPage} />
       <Route path="/" component={Landing} />
       <Route path="/services" component={Services} />
       <Route path="/booking" component={Booking} />
@@ -39,8 +41,8 @@ function Router() {
       <Route path="/contact" component={Contact} />
       
       {/* Protected routes for authenticated users */}
-      <ProtectedRoute path="/account" component={Account} />
-      <ProtectedRoute path="/home" component={Home} />
+      <ProtectedRoute path="/account" component={() => <Account />} />
+      <ProtectedRoute path="/home" component={() => <Home />} />
       
       {/* Admin routes - protected and require ADMIN role */}
       <Route path="/admin">
