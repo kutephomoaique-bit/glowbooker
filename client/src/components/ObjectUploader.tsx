@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { ReactNode } from "react";
 import Uppy from "@uppy/core";
 import { DashboardModal } from "@uppy/react";
@@ -26,6 +26,7 @@ interface ObjectUploaderProps {
  * 
  * Features:
  * - Renders as a customizable button that opens a file upload modal
+ * - Supports pasting images from clipboard (Ctrl+V)
  * - Provides a modal interface for:
  *   - File selection
  *   - File preview
@@ -76,6 +77,44 @@ export function ObjectUploader({
       })
   );
 
+  // Add paste support for images
+  useEffect(() => {
+    const handlePaste = async (e: ClipboardEvent) => {
+      // Only handle paste when modal is open
+      if (!showModal) return;
+      
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (item.type.indexOf('image') !== -1) {
+          e.preventDefault();
+          const blob = item.getAsFile();
+          if (blob) {
+            // Add the pasted image to Uppy
+            try {
+              uppy.addFile({
+                name: `pasted-image-${Date.now()}.${blob.type.split('/')[1] || 'png'}`,
+                type: blob.type,
+                data: blob,
+                source: 'Local',
+                isRemote: false,
+              });
+            } catch (error) {
+              console.error('Error adding pasted file to Uppy:', error);
+            }
+          }
+        }
+      }
+    };
+
+    document.addEventListener('paste', handlePaste);
+    return () => {
+      document.removeEventListener('paste', handlePaste);
+    };
+  }, [showModal, uppy]);
+
   return (
     <div>
       <Button 
@@ -92,7 +131,7 @@ export function ObjectUploader({
         onRequestClose={() => setShowModal(false)}
         proudlyDisplayPoweredByUppy={false}
         theme="light"
-        note="Only image files are allowed. Max file size: 10MB"
+        note="Only image files are allowed. Max file size: 10MB. You can also paste images with Ctrl+V!"
       />
     </div>
   );
