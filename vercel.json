@@ -1,0 +1,36 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist/public"
+      }
+    }
+  ],
+  "functions": {
+    "api/server.ts": {
+      "runtime": "nodejs20.x",
+      "maxDuration": 30
+    }
+  },
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/api/server.ts" },
+    { "handle": "filesystem" },
+    { "src": "/(.*)", "dest": "/index.html" }
+  ],
+  "build": {
+    "env": {
+      "NODE_ENV": "production"
+    }
+  },
+  "env": {
+    "DATABASE_URL": "@database_url",
+    "SESSION_SECRET": "@session_secret",
+    "REPLIT_DOMAINS": "@replit_domains",
+    "ISSUER_URL": "@issuer_url",
+    "PUBLIC_OBJECT_SEARCH_PATHS": "@public_object_search_paths",
+    "PRIVATE_OBJECT_DIR": "@private_object_dir"
+  }
+}

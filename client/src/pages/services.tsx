@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import type { Service, ServiceCategory, ContentSettings } from "@shared/schema";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -15,21 +16,21 @@ export default function Services() {
     document.title = "Services - HOME BASE Beauty Salon";
   }, []);
 
-  const { data: services = [], isLoading } = useQuery({
+  const { data: services = [], isLoading } = useQuery<Service[]>({
     queryKey: ["/api/services"],
   });
 
-  const { data: categories = [] } = useQuery({
+  const { data: categories = [] } = useQuery<ServiceCategory[]>({
     queryKey: ["/api/service-categories"],
   });
 
-  const { data: contentSettings } = useQuery({
+  const { data: contentSettings } = useQuery<ContentSettings>({
     queryKey: ["/api/content-settings"],
   });
 
   // Group services by category using boolean flags
-  const servicesByCategory = services.reduce((acc: any, service: any) => {
-    const categoryNames = [];
+  const servicesByCategory = services.reduce((acc: Record<string, Service[]>, service: Service) => {
+    const categoryNames: string[] = [];
     if (service.isNail) categoryNames.push('Nail');
     if (service.isEyelash) categoryNames.push('Eyelash');
     if (service.isFacial) categoryNames.push('Facial');
@@ -45,11 +46,11 @@ export default function Services() {
     });
     
     return acc;
-  }, {});
+  }, {} as Record<string, Service[]>);
 
   // Helper function to get category names from boolean flags
-  const getServiceCategories = (service: any) => {
-    const categories = [];
+  const getServiceCategories = (service: Service): string[] => {
+    const categories: string[] = [];
     if (service.isNail) categories.push('Nail');
     if (service.isEyelash) categories.push('Eyelash');
     if (service.isFacial) categories.push('Facial');
