@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import customEyelashImage from "@assets/Thiết kế chưa có tên (8)_1757850541617.png";
 
 interface GalleryImage {
   id: string;
@@ -31,7 +32,7 @@ export default function GallerySection({ images = [] }: GallerySectionProps) {
     },
     {
       id: '2', 
-      url: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=600",
+      url: customEyelashImage,
       category: 'Eyelash' as const,
       caption: "Beautiful eyelash extensions"
     },
@@ -49,7 +50,7 @@ export default function GallerySection({ images = [] }: GallerySectionProps) {
     },
     {
       id: '5',
-      url: "https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=600",
+      url: customEyelashImage,
       category: 'Eyelash' as const,
       caption: "Professional makeup with perfect lashes"
     },

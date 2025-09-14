@@ -2,6 +2,7 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles, Eye, Leaf } from "lucide-react";
+import customEyelashImage from "@assets/Thiết kế chưa có tên (8)_1757850541617.png";
 
 interface Service {
   id: string;
@@ -56,7 +57,7 @@ export default function ServicesSection({ services = [] }: ServicesSectionProps)
       case 'nail':
         return "https://images.unsplash.com/photo-1604654894610-df63bc536371?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400";
       case 'eyelash':
-        return "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400";
+        return customEyelashImage;
       case 'facial':
         return "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400";
       default:
