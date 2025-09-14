@@ -116,10 +116,10 @@ export default function Navigation() {
               </DropdownMenu>
             ) : (
               <Button variant="ghost" asChild data-testid="button-login">
-                <a href="/api/login">
+                <Link href="/auth">
                   <User className="w-4 h-4 mr-2" />
                   Login
-                </a>
+                </Link>
               </Button>
             )}
           </div>
@@ -184,10 +184,10 @@ export default function Navigation() {
                     </>
                   ) : (
                     <Button variant="outline" className="w-full justify-start" asChild data-testid="mobile-button-login">
-                      <a href="/api/login">
+                      <Link href="/auth">
                         <User className="w-4 h-4 mr-2" />
                         Login
-                      </a>
+                      </Link>
                     </Button>
                   )}
                 </div>
