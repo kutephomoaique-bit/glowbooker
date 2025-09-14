@@ -231,6 +231,10 @@ export default function AdminGallery() {
   const handleGetUploadParameters = async () => {
     try {
       const response: any = await apiRequest("POST", "/api/objects/upload");
+      console.log("Upload URL response:", response); // Debug log
+      if (!response.uploadURL) {
+        throw new Error("No upload URL received from server");
+      }
       return {
         method: "PUT" as const,
         url: response.uploadURL,

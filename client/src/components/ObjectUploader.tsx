@@ -69,7 +69,17 @@ export function ObjectUploader({
     })
       .use(AwsS3, {
         shouldUseMultipart: false,
-        getUploadParameters: onGetUploadParameters,
+        getUploadParameters: async (file) => {
+          try {
+            console.log("Getting upload parameters for file:", file.name);
+            const params = await onGetUploadParameters();
+            console.log("Received upload parameters:", params);
+            return params;
+          } catch (error) {
+            console.error("Error getting upload parameters:", error);
+            throw error;
+          }
+        },
       })
       .on("complete", (result) => {
         onComplete?.(result);
@@ -94,13 +104,22 @@ export function ObjectUploader({
           if (blob) {
             // Add the pasted image to Uppy
             try {
+              const fileName = `pasted-image-${Date.now()}.${blob.type.split('/')[1] || 'png'}`;
+              
+              // Check file size before adding
+              if (blob.size > maxFileSize) {
+                console.warn(`Pasted file too large: ${blob.size} bytes, max: ${maxFileSize}`);
+                return;
+              }
+
               uppy.addFile({
-                name: `pasted-image-${Date.now()}.${blob.type.split('/')[1] || 'png'}`,
+                name: fileName,
                 type: blob.type,
                 data: blob,
                 source: 'Local',
                 isRemote: false,
               });
+              console.log(`Added pasted file: ${fileName}, size: ${blob.size} bytes`);
             } catch (error) {
               console.error('Error adding pasted file to Uppy:', error);
             }
